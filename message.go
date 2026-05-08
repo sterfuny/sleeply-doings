@@ -7,6 +7,7 @@ import (
 	"strings"
 )
 
+//如果是单个请求写url参数是可以的,但是想要长连接还是用请求体好
 type Message struct {
 	App     *AppInfo `json:"app,omitempty"`
 	Battery *int     `json:"battery,omitempty"`
@@ -17,7 +18,6 @@ type AppInfo struct {
 	Name string `json:"name,omitempty"`
 	Pkg  string `json:"pkg,omitempty"`
 }
-//如果是单个请求写url参数是可以的,但是想要长连接还是用请求体好
 
 func (m *Message) ToJSON() ([]byte, error) {
 	return json.Marshal(m)

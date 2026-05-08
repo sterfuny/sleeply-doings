@@ -9,15 +9,22 @@ import (
 )
 
 var upgrader = websocket.Upgrader{
-	CheckOrigin: func(r *http.Request) bool {
-		return true
-	},
+	CheckOrigin:	func(r *http.Request) bool {return true},
+	ReadBufferSize:	1024,
+	WriteBufferSize:1024,
 }
+
+const (
+	writeWait	= 10 * time.Second
+	pongWait	= 60 * time.Second
+	pingSpit	= (pongWait*9) / 10
+)
+//var conns = make(map[*websocket.Conn])
 
 func handleConn(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Printf("升级失败: %v", err)
+		log.Print(err)
 		return
 	}
 	defer conn.Close()
@@ -25,14 +32,15 @@ func handleConn(w http.ResponseWriter, r *http.Request) {
 	log.Printf("新连接: %s", conn.RemoteAddr())
 
 	//歇息心跳
-	idleTimeout := 30 * time.Second
-	timer := time.NewTimer(idleTimeout)
+	timer := time.NewTimer(pingSpit)
 	defer timer.Stop()
-
-	conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+	
+	//初次死线
+	conn.SetReadDeadline(time.Now().Add(pongWait))
+	//服务端设置收pong触发器
 	conn.SetPongHandler(func(string) error {
-		conn.SetReadDeadline(time.Now().Add(60 * time.Second))
-		timer.Reset(idleTimeout)
+		conn.SetReadDeadline(time.Now().Add(pongWait))
+		timer.Reset(pingSpit)
 		return nil
 	})
 
@@ -42,37 +50,37 @@ func handleConn(w http.ResponseWriter, r *http.Request) {
 	go func() {
 		for {
 			select {
-			case <-timer.C:
-				if err := conn.WriteControl(websocket.PingMessage, nil, time.Now().Add(10*time.Second)); err != nil {
+				case <-timer.C:				
+					if err := conn.WriteControl(websocket.PingMessage, nil, time.Now().Add(writeWait)); err != nil {
+						return
+					}
+					timer.Reset(pingSpit)
+				case <-done:
 					return
-				}
-				timer.Reset(idleTimeout)
-			case <-done:
-				return
 			}
 		}
 	}()
 
 	for {
-    _, msgBytes, err := conn.ReadMessage()
-    if err != nil {
-        log.Printf("读取失败: %v", err)
-        break
-    }
-    conn.SetReadDeadline(time.Now().Add(60 * time.Second)) // 每条消息都重置
-    timer.Reset(30 * time.Second)
+		_, msgBytes, err := conn.ReadMessage()
+		if err != nil {
+			log.Printf("读取失败: %v", err)
+			break
+		}
+		conn.SetReadDeadline(time.Now().Add(pongWait))
+		timer.Reset(pingSpit)
 
-    msg, err := MessageFromJSON(msgBytes)
-    if err != nil {
-        log.Printf("JSON解析失败: %v", err)
-        continue
-    }
-    log.Printf("收到: %s", formatMessage(msg))
+		msg, err := MessageFromJSON(msgBytes)
+		if err != nil {
+			log.Printf("JSON解析失败: %v", err)
+			continue
+		}
+		log.Printf("%s", formatMessage(msg))
 	}
 }
 
 func startServer(addr string) error {
 	http.HandleFunc("/ws", handleConn)
-	log.Printf("服务启动在 %s", addr)
+	log.Printf("服务: %s", addr)
 	return http.ListenAndServe(addr, nil)
 }
