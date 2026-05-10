@@ -14,11 +14,6 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize:1024,
 }
 
-const (
-	writeWait	= 10 * time.Second
-	pongWait	= 60 * time.Second
-	pingSpit	= (pongWait*9) / 10
-)
 //var conns = make(map[*websocket.Conn])
 
 func handleConn(w http.ResponseWriter, r *http.Request) {
@@ -36,10 +31,10 @@ func handleConn(w http.ResponseWriter, r *http.Request) {
 	defer timer.Stop()
 	
 	//初次死线
-	conn.SetReadDeadline(time.Now().Add(pongWait))
+	conn.SetReadDeadline(time.Now().Add(holdWait))
 	//服务端设置收pong触发器
 	conn.SetPongHandler(func(string) error {
-		conn.SetReadDeadline(time.Now().Add(pongWait))
+		conn.SetReadDeadline(time.Now().Add(holdWait))
 		timer.Reset(pingSpit)
 		return nil
 	})
@@ -67,7 +62,7 @@ func handleConn(w http.ResponseWriter, r *http.Request) {
 			log.Printf("读取失败: %v", err)
 			break
 		}
-		conn.SetReadDeadline(time.Now().Add(pongWait))
+		conn.SetReadDeadline(time.Now().Add(holdWait))
 		timer.Reset(pingSpit)
 
 		msg, err := MessageFromJSON(msgBytes)

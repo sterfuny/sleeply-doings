@@ -28,7 +28,8 @@ type Client struct {
 	idleTimer *time.Timer
 }
 
-func (c *Client) UpdateApp(name, pkg string) {
+//TODO: Message into
+func (c *Client) UpdateInfo(name, pkg string) {
 	c.msgMu.Lock()
 	defer c.msgMu.Unlock()
 	if c.lastMessage == nil {
@@ -43,24 +44,6 @@ func (c *Client) UpdateApp(name, pkg string) {
 	if pkg != "" {
 		c.lastMessage.App.Pkg = pkg
 	}
-}
-
-func (c *Client) UpdateBattery(val int) {
-	c.msgMu.Lock()
-	defer c.msgMu.Unlock()
-	if c.lastMessage == nil {
-		c.lastMessage = &Message{}
-	}
-	c.lastMessage.Battery = &val
-}
-
-func (c *Client) UpdateScreen(val bool) {
-	c.msgMu.Lock()
-	defer c.msgMu.Unlock()
-	if c.lastMessage == nil {
-		c.lastMessage = &Message{}
-	}
-	c.lastMessage.Screen = &val
 }
 
 func (c *Client) GetLastMessage() *Message {
@@ -108,16 +91,8 @@ func (c *Client) connect() error {
 	}
 	c.conn = conn
 
-	// 创建新的空闲计时器
-	idleTimeout := 25 * time.Second
-	if c.idleTimer != nil {
-		c.idleTimer.Stop()
-	}
-	c.idleTimer = time.NewTimer(idleTimeout)
-	c.mu.Unlock()
-
 	conn.SetPingHandler(func(appData string) error {
-		c.idleTimer.Reset(idleTimeout)
+		c.idleTimer.Reset(holdWait)
 		return conn.WriteControl(
 			websocket.PongMessage,
 			[]byte{},
@@ -126,7 +101,7 @@ func (c *Client) connect() error {
 	})
 
 	conn.SetPongHandler(func(appData string) error {
-		c.idleTimer.Reset(idleTimeout)
+		c.idleTimer.Reset(holdWait)
 		conn.SetReadDeadline(time.Now().Add(60 * time.Second))
 		return nil
 	})
@@ -146,12 +121,12 @@ func (c *Client) connect() error {
 
 	// 启动读循环和空闲心跳
 	go c.readLoop()
-	go c.idleHeartbeat(idleTimeout)
+	go c.idleHeartbeat(holdWait)
 
 	return nil
 }
 
-func (c *Client) idleHeartbeat(idleTimeout time.Duration) {
+func (c *Client) idleHeartbeat(holdWait time.Duration) {
 	for {
 		select {
 		case <-c.idleTimer.C:
@@ -163,7 +138,7 @@ func (c *Client) idleHeartbeat(idleTimeout time.Duration) {
 					return
 				}
 			}
-			c.idleTimer.Reset(idleTimeout)
+			c.idleTimer.Reset(holdWait)
 		case <-c.ctx.Done():
 			return
 		}
