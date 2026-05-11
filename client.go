@@ -4,7 +4,6 @@ package main
 import (
 	"context"
 	"log"
-	"math"
 	"net/url"
 	"sync"
 	"time"
@@ -22,33 +21,32 @@ type Client struct {
 
 	//缓存完整状态
 	lastMessage *Message
-	msgMu       sync.RWMutex
+	muPub       sync.RWMutex
 
 	//心跳计时器
 	idleTimer *time.Timer
 }
 
-//TODO: Message into
-func (c *Client) UpdateInfo(name, pkg string) {
-	c.msgMu.Lock()
-	defer c.msgMu.Unlock()
+func (c *Client) UpdateInfo(name, pkg string, Battery int, Screen bool) {
+	c.muPub.Lock()
+	defer c.muPub.Unlock()
 	if c.lastMessage == nil {
 		c.lastMessage = &Message{}
 	}
 	if c.lastMessage.App == nil {
-		c.lastMessage.App = &AppInfo{}
+		c.lastMessage.App = &AppInfo{name, pkg}
 	}
-	if name != "" {
-		c.lastMessage.App.Name = name
+	if c.lastMessage.Battery == nil {
+		c.lastMessage.Battery = &Battery
 	}
-	if pkg != "" {
-		c.lastMessage.App.Pkg = pkg
+	if c.lastMessage.Screen == nil {
+		c.lastMessage.Screen = &Screen
 	}
 }
 
 func (c *Client) GetLastMessage() *Message {
-	c.msgMu.RLock()
-	defer c.msgMu.RUnlock()
+	c.muPub.RLock()
+	defer c.muPub.RUnlock()
 	if c.lastMessage == nil {
 		return &Message{}
 	}
@@ -66,10 +64,10 @@ func NewClient(serverURL string) *Client {
 	}
 
 	if err := c.connect(); err != nil {
-		log.Printf("初始连接失败: %v，将自动重连...", err)
+		log.Printf("连接失败:%v", err)
 	}
 
-	go c.reconnectLoop()
+	//go c.reconnectLoop()
 
 	return c
 }
@@ -91,22 +89,19 @@ func (c *Client) connect() error {
 	}
 	c.conn = conn
 
+	// 初次死线
+	conn.SetReadDeadline(time.Now().Add(holdWait))
+	// 设置收ping触发器
 	conn.SetPingHandler(func(appData string) error {
-		c.idleTimer.Reset(holdWait)
+		conn.SetReadDeadline(time.Now().Add(holdWait))
 		return conn.WriteControl(
 			websocket.PongMessage,
 			[]byte{},
-			time.Now().Add(10*time.Second),
+			time.Now().Add(writeWait),
 		)
 	})
 
-	conn.SetPongHandler(func(appData string) error {
-		c.idleTimer.Reset(holdWait)
-		conn.SetReadDeadline(time.Now().Add(60 * time.Second))
-		return nil
-	})
-
-	log.Printf("已连接到 %s", c.serverURL)
+	log.Printf("已建立连接:%s", c.serverURL)
 
 	// 重连补发完整状态
 	lastMsg := c.GetLastMessage()
@@ -134,7 +129,7 @@ func (c *Client) idleHeartbeat(holdWait time.Duration) {
 			conn := c.conn
 			c.mu.Unlock()
 			if conn != nil {
-				if err := conn.WriteControl(websocket.PingMessage, nil, time.Now().Add(10*time.Second)); err != nil {
+				if err := conn.WriteControl(websocket.PingMessage, nil, time.Now().Add(writeWait)); err != nil {
 					return
 				}
 			}
@@ -144,7 +139,7 @@ func (c *Client) idleHeartbeat(holdWait time.Duration) {
 		}
 	}
 }
-
+/*
 func (c *Client) reconnectLoop() {
 	retry := 0
 	maxBackoff := 60 * time.Second
@@ -161,7 +156,7 @@ func (c *Client) reconnectLoop() {
 				float64(maxBackoff),
 			))
 
-			log.Printf("等待%v...", /*retry,*/ backoff)
+			log.Printf("等待%v %v...", retry, backoff)
 
 			select {
 			case <-c.ctx.Done():
@@ -183,7 +178,7 @@ func (c *Client) reconnectLoop() {
 		}
 	}
 }
-
+*/
 func (c *Client) triggerReconnect() {
 	select {
 	case c.reconnect <- struct{}{}:
@@ -198,7 +193,7 @@ func (c *Client) Send(msg *Message) error {
 
 	if conn == nil {
 		c.triggerReconnect()
-		return ErrNotConnected
+		// return ErrNotConnected
 	}
 
 	data, err := msg.ToJSON()
@@ -206,7 +201,7 @@ func (c *Client) Send(msg *Message) error {
 		return err
 	}
 
-	conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
+	conn.SetWriteDeadline(time.Now().Add(writeWait))
 	if err := conn.WriteMessage(websocket.TextMessage, data); err != nil {
 		c.triggerReconnect()
 		return err
@@ -254,12 +249,3 @@ func (c *Client) Close() {
 	}
 }
 
-var ErrNotConnected = &ClientError{"未连接到服务器，正在重连..."}
-
-type ClientError struct {
-	msg string
-}
-
-func (e *ClientError) Error() string {
-	return e.msg
-}

@@ -12,7 +12,7 @@ type PushHandler struct {
 
 func (h *PushHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet && r.Method != http.MethodPost {
-		http.Error(w, "仅支持GET/POST", http.StatusMethodNotAllowed)
+		http.Error(w, "非GET/POST请求", http.StatusMethodNotAllowed)
 		return
 	}
 
@@ -46,6 +46,8 @@ func (h *PushHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	
+	h.client.UpdateInfo(msg.App.Name, msg.App.Pkg, *msg.Battery, *msg.Screen)
+	/*
 	// 更新缓存
 	if msg.App != nil {
 		h.client.UpdateApp(msg.App.Name, msg.App.Pkg)
@@ -56,7 +58,7 @@ func (h *PushHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if msg.Screen != nil {
 		h.client.UpdateScreen(*msg.Screen)
 	}
-
+	*/
 	//resp, err := h.client.Send(&msg)
 	if err := h.client.Send(&msg); err != nil {
     log.Printf("WebSocket推送失败: %v", err)

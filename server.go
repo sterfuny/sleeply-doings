@@ -24,15 +24,15 @@ func handleConn(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.Close()
 
-	log.Printf("新连接: %s", conn.RemoteAddr())
+	log.Printf("新连接:%s", conn.RemoteAddr())
 
-	//歇息心跳
+	// 歇息心跳
 	timer := time.NewTimer(pingSpit)
 	defer timer.Stop()
 	
-	//初次死线
+	// 初次死线
 	conn.SetReadDeadline(time.Now().Add(holdWait))
-	//服务端设置收pong触发器
+	// 设置收pong触发器
 	conn.SetPongHandler(func(string) error {
 		conn.SetReadDeadline(time.Now().Add(holdWait))
 		timer.Reset(pingSpit)
@@ -46,7 +46,10 @@ func handleConn(w http.ResponseWriter, r *http.Request) {
 		for {
 			select {
 				case <-timer.C:				
-					if err := conn.WriteControl(websocket.PingMessage, nil, time.Now().Add(writeWait)); err != nil {
+					if err := conn.WriteControl(
+						websocket.PingMessage,
+						nil,
+						time.Now().Add(writeWait));err != nil {
 						return
 					}
 					timer.Reset(pingSpit)
@@ -59,7 +62,7 @@ func handleConn(w http.ResponseWriter, r *http.Request) {
 	for {
 		_, msgBytes, err := conn.ReadMessage()
 		if err != nil {
-			log.Printf("读取失败: %v", err)
+			log.Printf("读取失败:%v", err)
 			break
 		}
 		conn.SetReadDeadline(time.Now().Add(holdWait))
@@ -67,7 +70,7 @@ func handleConn(w http.ResponseWriter, r *http.Request) {
 
 		msg, err := MessageFromJSON(msgBytes)
 		if err != nil {
-			log.Printf("JSON解析失败: %v", err)
+			log.Printf("JSON解析失败:%v", err)
 			continue
 		}
 		log.Printf("%s", formatMessage(msg))
@@ -76,6 +79,6 @@ func handleConn(w http.ResponseWriter, r *http.Request) {
 
 func startServer(addr string) error {
 	http.HandleFunc("/ws", handleConn)
-	log.Printf("服务: %s", addr)
+	log.Printf("服务启动:%s", addr)
 	return http.ListenAndServe(addr, nil)
 }
