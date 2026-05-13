@@ -18,6 +18,8 @@ type AppInfo struct {
 	Pkg  string `json:"pkg,omitempty"`
 }
 
+var msg *Message = &Message{App: &AppInfo{}}
+
 func (m *Message) ToJSON() ([]byte, error) {
 	return json.Marshal(m)
 }
@@ -43,3 +45,16 @@ func formatMessage(m *Message) string {
 	}
 	return fmt.Sprintf("{%s}", strings.Join(parts, " "))
 }
+/*
+func (m *Message) UpdateInfo(name, pkg string, battery int, screen bool) {
+	if m.App == nil {
+		m.App = &AppInfo{name, pkg}
+	}
+	if ba == nil {
+		m.Battery = &Battery
+	}
+	if m.Screen == nil {
+		m.Screen = &Screen
+	}
+}
+*/

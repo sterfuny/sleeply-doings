@@ -6,9 +6,7 @@ import (
 	"strconv"
 )
 
-type PushHandler struct {
-	client *Client
-}
+type PushHandler struct{}
 
 func (h *PushHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet && r.Method != http.MethodPost {
@@ -18,19 +16,13 @@ func (h *PushHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	q := r.URL.Query()
 
-	var msg Message
+	// msg := Message{App: &AppInfo{}}
 
 	if v := q.Get("app_name"); v != "" {
-		if msg.App == nil {
-			msg.App = &AppInfo{}
-		}
 		msg.App.Name = v
 	}
 
 	if v := q.Get("app_pkg"); v != "" {
-		if msg.App == nil {
-			msg.App = &AppInfo{}
-		}
 		msg.App.Pkg = v
 	}
 
@@ -46,32 +38,12 @@ func (h *PushHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	
-	h.client.UpdateInfo(msg.App.Name, msg.App.Pkg, *msg.Battery, *msg.Screen)
-	/*
-	// 更新缓存
-	if msg.App != nil {
-		h.client.UpdateApp(msg.App.Name, msg.App.Pkg)
-	}
-	if msg.Battery != nil {
-		h.client.UpdateBattery(*msg.Battery)
-	}
-	if msg.Screen != nil {
-		h.client.UpdateScreen(*msg.Screen)
-	}
-	*/
-	//resp, err := h.client.Send(&msg)
-	if err := h.client.Send(&msg); err != nil {
-    log.Printf("WebSocket推送失败: %v", err)
-    http.Error(w, "推送失败: "+err.Error(), http.StatusServiceUnavailable)
-    return
-	}
-	
+	// msg.UpdateInfo(msg.App, msg.Battery, msg.Screen)	
 	w.WriteHeader(http.StatusOK)  //return 200
-	log.Printf("HTTP推送成功: %s", formatMessage(&msg))
+	log.Printf("HTTP推送成功: %s", formatMessage(msg))
 }
 
-func startHTTPPush(client *Client, addr string) error {
-	handler := &PushHandler{client: client}
+func startHTTPPush(addr string, ) error {
 	log.Printf("HTTP接口启动在 %s", addr)
-	return http.ListenAndServe(addr, handler)
+	return http.ListenAndServe(addr, &PushHandler{})
 }
