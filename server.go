@@ -16,7 +16,7 @@ var upgrader = websocket.Upgrader{
 
 //var conns = make(map[*websocket.Conn])
 
-func handleConn(w http.ResponseWriter, r *http.Request) {
+func (c *Peer) handleConn(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Print(err)
@@ -26,16 +26,16 @@ func handleConn(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("新连接:%s", conn.RemoteAddr())
 
-	// 歇息心跳
-	timer := time.NewTimer(pingSpit)
-	defer timer.Stop()
+	// 放入计时
+	c.timer = time.NewTimer(pingSpit)
+	defer c.timer.Stop()
 	
 	// 初次死线
 	conn.SetReadDeadline(time.Now().Add(holdWait))
 	// 设置收pong触发器
 	conn.SetPongHandler(func(string) error {
 		conn.SetReadDeadline(time.Now().Add(holdWait))
-		timer.Reset(pingSpit)
+		c.timer.Reset(pingSpit)
 		return nil
 	})
 
@@ -45,14 +45,14 @@ func handleConn(w http.ResponseWriter, r *http.Request) {
 	go func() {
 		for {
 			select {
-				case <-timer.C:				
+				case <-c.timer.C:				
 					if err := conn.WriteControl(
 						websocket.PingMessage,
 						nil,
 						time.Now().Add(writeWait));err != nil {
 						return
 					}
-					timer.Reset(pingSpit)
+					c.timer.Reset(pingSpit)
 				case <-done:
 					return
 			}
@@ -66,7 +66,7 @@ func handleConn(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 		conn.SetReadDeadline(time.Now().Add(holdWait))
-		timer.Reset(pingSpit)
+		c.timer.Reset(pingSpit)
 
 		msg, err := MessageFromJSON(msgBytes)
 		if err != nil {
@@ -77,8 +77,8 @@ func handleConn(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func startServer(addr string) error {
-	http.HandleFunc("/ws", handleConn)
+func startServer(addr string, c *Peer) error {
+	http.HandleFunc("/ws", c.handleConn)
 	log.Printf("服务启动:%s", addr)
 	return http.ListenAndServe(addr, nil)
 }
