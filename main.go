@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"time"
 )
 
 func main() {
@@ -21,12 +22,23 @@ func main() {
 
 	newMsg = make(chan struct{}, 1)
 	client := &Peer{serverURL: *serverAddr}
-	go client.connect()
+	go func(){
+		for{
+			if err := client.connect(); err != nil {
+				log.Printf("连接失败:%v", err)
+				time.Sleep(5*time.Second)
+			} else {	
+				log.Print("注销")
+			}
+		}
+	}()
 	defer client.Close()
 
-	if err := startHTTPPush(":9090"); err != nil {
-		log.Fatal(err)
-	}
+	go func(){
+		if err := startHTTPPush(":9090"); err != nil {
+			log.Fatal(err)
+		}
+	}()
 	
 	go func(){
 		for {
@@ -37,6 +49,7 @@ func main() {
 			}
 		}
 	}()
+
 	log.Printf("客户端已启动，HTTP接口:9090/push，WebSocket连接: %s", *serverAddr)
 	select {}
 }

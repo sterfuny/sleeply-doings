@@ -20,7 +20,6 @@ func (c *Peer) connect() error {
 	}
 
 	c.mu.Lock()
-	defer c.mu.Unlock()
 	if c.conn != nil {
 		c.conn.Close()
 	}
@@ -33,45 +32,35 @@ func (c *Peer) connect() error {
 		conn.SetReadDeadline(time.Now().Add(holdWait))
 		return conn.WriteControl(
 			websocket.PongMessage,
-			[]byte{},
+			nil,
 			time.Now().Add(writeWait),
 		)
 	})
-
+	
+	c.mu.Unlock()
 	log.Printf("已建立连接:%s", c.serverURL)
-	/*
-	// 重连补发完整状态
-	if msg.App != nil || msg.Battery != nil || msg.Screen != nil {
-		err := c.Send(msg)
-		if err != nil {
-			return err
-		}
-	}
-	*/
 	for {
-		_, msgBytes, err := conn.ReadMessage()
+		_, _, err := conn.ReadMessage()
 		if err != nil {
 			log.Printf("读取失败:%v", err)
-			break
+			return err
 		}
 		conn.SetReadDeadline(time.Now().Add(holdWait))
-		msgBytes = msgBytes
 	}
 	return nil
 }
 
 func (c *Peer) Send(msg *Message) error {
-	c.mu.Lock()
+	c.mu.Lock()	
+	defer c.mu.Unlock()
 	conn := c.conn
-	c.mu.Unlock()
 
 	if conn == nil {
-		// c.connect()
-		// conn = c.conn
-		// return ErrNotConnected
+		c.connect()
 	}
 
 	data, err := msg.ToJSON()
+	// log.Printf("jsonsend")
 	if err != nil {
 		return err
 	}
@@ -80,6 +69,7 @@ func (c *Peer) Send(msg *Message) error {
 	if err := conn.WriteMessage(websocket.TextMessage, data); err != nil {
 		return err
 	}
+	conn.SetReadDeadline(time.Now().Add(holdWait))
 	return nil
 }
 
