@@ -45,16 +45,15 @@ func formatMessage(m *Message) string {
 	}
 	return fmt.Sprintf("{%s}", strings.Join(parts, " "))
 }
-/*
-func (m *Message) UpdateInfo(name, pkg string, battery int, screen bool) {
+
+func (m *Message) Update(app AppInfo, battery int, screen bool) {
 	if m.App == nil {
-		m.App = &AppInfo{name, pkg}
+		m.App = &app
 	}
-	if ba == nil {
-		m.Battery = &Battery
+	if m.Battery == nil {
+		m.Battery = &battery
 	}
 	if m.Screen == nil {
-		m.Screen = &Screen
+		m.Screen = &screen
 	}
 }
-*/

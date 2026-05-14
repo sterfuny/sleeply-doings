@@ -20,15 +20,16 @@ func main() {
 	}
 
 	// 客户端：使用参数指定的地址
-	client := NewClient(*serverAddr)
+	
+	client := &Peer{serverURL: *serverAddr}
 	defer client.Close()
 
 	go func() {
-		if err := startHTTPPush(client, ":9090"); err != nil {
+		if err := startHTTPPush(":9090"); err != nil {
 			log.Fatal(err)
 		}
 	}()
 
-	log.Printf("客户端已启动，HTTP接口: :9090/push，WebSocket连接: %s", *serverAddr)
+	log.Printf("客户端已启动，HTTP接口:9090/push，WebSocket连接: %s", *serverAddr)
 	select {}
 }

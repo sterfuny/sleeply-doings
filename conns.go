@@ -22,12 +22,11 @@ type Peer struct {
 
 	mu        sync.Mutex
 	muPub     sync.RWMutex
-	ctx       context.Context
 	cancel    context.CancelFunc
 }
 
 var Pool map[int]*Peer
-// var Poolindex int = 0
+var Poolindex int = 0
 /*
 func addPeer(p *Peer) int{
 	Poolindex++

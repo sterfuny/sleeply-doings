@@ -81,7 +81,7 @@ func handleWSClient(conn *websocket.Conn){
 	}
 }
 
-func startServer(addr string, c *Peer) error {
+func startServer(addr string) error {
 	http.HandleFunc("/ws", handleConn)
 	log.Printf("服务启动:%s", addr)
 	return http.ListenAndServe(addr, nil)

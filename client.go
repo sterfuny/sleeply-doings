@@ -41,7 +41,7 @@ func (c *Peer) connect() error {
 	log.Printf("已建立连接:%s", c.serverURL)
 
 	// 重连补发完整状态
-	msg := c.lastMessage
+	msg := c.lastMsg
 	if msg.App != nil || msg.Battery != nil || msg.Screen != nil {
 		err := c.Send(msg)
 		if err != nil {
