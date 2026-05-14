@@ -1,4 +1,3 @@
-
 package main
 
 import (
@@ -20,15 +19,24 @@ func main() {
 		log.Fatal(startServer(addr))
 	}
 
+	newMsg = make(chan struct{}, 1)
 	client := &Peer{serverURL: *serverAddr}
+	go client.connect()
 	defer client.Close()
 
-	go func() {
-		if err := startHTTPPush(":9090"); err != nil {
-			log.Fatal(err)
+	if err := startHTTPPush(":9090"); err != nil {
+		log.Fatal(err)
+	}
+	
+	go func(){
+		for {
+			<-newMsg
+			err := client.Send(msg)
+			if err != nil {
+				log.Print(err)
+			}
 		}
 	}()
-
 	log.Printf("客户端已启动，HTTP接口:9090/push，WebSocket连接: %s", *serverAddr)
 	select {}
 }

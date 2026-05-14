@@ -33,20 +33,29 @@ func (c *Peer) connect() error {
 		conn.SetReadDeadline(time.Now().Add(holdWait))
 		return conn.WriteControl(
 			websocket.PongMessage,
-			nil,
+			[]byte{},
 			time.Now().Add(writeWait),
 		)
 	})
 
 	log.Printf("已建立连接:%s", c.serverURL)
-
+	/*
 	// 重连补发完整状态
-	msg := c.lastMsg
 	if msg.App != nil || msg.Battery != nil || msg.Screen != nil {
 		err := c.Send(msg)
 		if err != nil {
 			return err
 		}
+	}
+	*/
+	for {
+		_, msgBytes, err := conn.ReadMessage()
+		if err != nil {
+			log.Printf("读取失败:%v", err)
+			break
+		}
+		conn.SetReadDeadline(time.Now().Add(holdWait))
+		msgBytes = msgBytes
 	}
 	return nil
 }
@@ -57,7 +66,8 @@ func (c *Peer) Send(msg *Message) error {
 	c.mu.Unlock()
 
 	if conn == nil {
-		c.connect()
+		// c.connect()
+		// conn = c.conn
 		// return ErrNotConnected
 	}
 
@@ -68,7 +78,6 @@ func (c *Peer) Send(msg *Message) error {
 
 	conn.SetWriteDeadline(time.Now().Add(writeWait))
 	if err := conn.WriteMessage(websocket.TextMessage, data); err != nil {
-		c.connect()
 		return err
 	}
 	return nil

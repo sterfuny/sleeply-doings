@@ -19,6 +19,7 @@ type AppInfo struct {
 }
 
 var msg *Message = &Message{App: &AppInfo{}}
+var newMsg chan struct{}
 
 func (m *Message) ToJSON() ([]byte, error) {
 	return json.Marshal(m)
@@ -46,14 +47,29 @@ func formatMessage(m *Message) string {
 	return fmt.Sprintf("{%s}", strings.Join(parts, " "))
 }
 
-func (m *Message) Update(app AppInfo, battery int, screen bool) {
-	if m.App == nil {
-		m.App = &app
+func (m *Message) Update(app *AppInfo, battery *int, screen *bool) {
+	if app != nil {
+	    if m.App == nil {
+			m.App = app
+		} else {
+			if app.Name != "" {
+				m.App.Name = app.Name
+			}
+			if app.Pkg != "" {
+				m.App.Pkg = app.Pkg
+			}
+		}
 	}
-	if m.Battery == nil {
-		m.Battery = &battery
+	if battery != nil {
+		m.Battery = battery
 	}
-	if m.Screen == nil {
-		m.Screen = &screen
+	if screen != nil {
+		m.Screen = screen
+	}
+	select {
+		case newMsg <- struct{}{}:
+	    // 如果 newMsg 有空位（还没满），立即发送成功
+		default:
+	    // 如果 newMsg 已满（上次的还没被接收），直接跳过
 	}
 }

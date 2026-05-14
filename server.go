@@ -33,7 +33,7 @@ func handleWSClient(conn *websocket.Conn){
 	// 放入计时
 	timer := time.NewTimer(pingSpit)
 	defer timer.Stop()
-	
+
 	// 初次死线
 	conn.SetReadDeadline(time.Now().Add(holdWait))
 	// 设置收pong触发器

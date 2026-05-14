@@ -40,12 +40,12 @@ func (h *PushHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	
-	msg.Update(*App, *Battery, *Screen)	
+	msg.Update(App, Battery, Screen)
 	w.WriteHeader(http.StatusOK)  //return 200
 	log.Printf("HTTP推送成功:%s", formatMessage(msg))
 }
 
-func startHTTPPush(addr string, ) error {
+func startHTTPPush(addr string) error {
 	log.Printf("HTTP接口启动在%s", addr)
 	return http.ListenAndServe(addr, &PushHandler{})
 }
