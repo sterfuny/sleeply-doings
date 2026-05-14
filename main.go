@@ -9,9 +9,10 @@ import (
 
 func main() {
 	var mode string
-	port := flag.Int("port", 8080, "服务端端口")
-	serverAddr := flag.String("server", "ws://localhost:8080/ws", "服务端地址(客户端模式)")
-	flag.StringVar(&mode, "mode", "server", "server或client")
+	port := flag.Int("port", 8080, "server port")
+	serverAddr := flag.String("server", "ws://localhost:8080/ws", "server URL(client mode)")
+	flag.StringVar(&mode, "mode", "server", "mode is server/client")
+	// 获取用户输入参数
 	flag.Parse()
 
 	if mode == "server" {
@@ -19,8 +20,6 @@ func main() {
 		log.Fatal(startServer(addr))
 	}
 
-	// 客户端：使用参数指定的地址
-	
 	client := &Peer{serverURL: *serverAddr}
 	defer client.Close()
 
