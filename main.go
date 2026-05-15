@@ -20,30 +20,28 @@ func main() {
 		log.Fatal(startServer(addr))
 	}
 
-	newMsg = make(chan struct{}, 1)
 	client := &Peer{serverURL: *serverAddr}
-	go func(){
-		for{
+	go func() {
+		for {
 			if err := client.connect(); err != nil {
 				log.Printf("连接失败:%v", err)
-				time.Sleep(5*time.Second)
-			} else {	
+				time.Sleep(10 * time.Second)
+			} else {
 				log.Print("注销")
 			}
 		}
 	}()
 	defer client.Close()
 
-	go func(){
+	go func() {
 		if err := startHTTPPush(":9090"); err != nil {
 			log.Fatal(err)
 		}
 	}()
-	
-	go func(){
+
+	go func() {
 		for {
-			<-newMsg
-			err := client.Send(msg)
+			err := client.Send(<-newMsg)
 			if err != nil {
 				log.Print(err)
 			}

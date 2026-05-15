@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-//如果是单个请求写url参数是可以的,但需要长连接还是用请求体好
+// 如果是单个请求写url参数是可以的,但需要长连接还是用请求体好
 type Message struct {
 	App     *AppInfo `json:"app,omitempty"`
 	Battery *int     `json:"battery,omitempty"`
@@ -19,7 +19,7 @@ type AppInfo struct {
 }
 
 var msg *Message = &Message{App: &AppInfo{}}
-var newMsg chan struct{}
+var newMsg chan *Message = make(chan *Message)
 
 func (m *Message) ToJSON() ([]byte, error) {
 	return json.Marshal(m)
@@ -47,29 +47,30 @@ func formatMessage(m *Message) string {
 	return fmt.Sprintf("{%s}", strings.Join(parts, " "))
 }
 
-func (m *Message) Update(app *AppInfo, battery *int, screen *bool) {
+func updateInfo(app *AppInfo, battery *int, screen *bool) {
 	if app != nil {
-	    if m.App == nil {
-			m.App = app
+		if msg.App == nil {
+			msg.App = app
 		} else {
 			if app.Name != "" {
-				m.App.Name = app.Name
+				msg.App.Name = app.Name
 			}
 			if app.Pkg != "" {
-				m.App.Pkg = app.Pkg
+				msg.App.Pkg = app.Pkg
 			}
 		}
 	}
 	if battery != nil {
-		m.Battery = battery
+		msg.Battery = battery
 	}
 	if screen != nil {
-		m.Screen = screen
+		msg.Screen = screen
 	}
+
 	select {
-		case newMsg <- struct{}{}:
-	    // 如果 newMsg 有空位（还没满），立即发送成功
-		default:
-	    // 如果 newMsg 已满（上次的还没被接收），直接跳过
+	case newMsg <- &Message{App: app, Battery: battery, Screen: screen}:
+		// 如果 newMsg 有空位（还没满），立即发送成功
+	default:
+		// 如果 newMsg 已满（上次的还没被接收），直接跳过
 	}
 }

@@ -9,9 +9,9 @@ import (
 )
 
 var upgrader = websocket.Upgrader{
-	CheckOrigin:	func(r *http.Request) bool {return true},
-	ReadBufferSize:	1024,
-	WriteBufferSize:1024,
+	CheckOrigin:     func(r *http.Request) bool { return true },
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
 }
 
 //var conns = make(map[*websocket.Conn])
@@ -25,7 +25,7 @@ func handleConn(w http.ResponseWriter, r *http.Request) {
 	go handleWSClient(conn)
 }
 
-func handleWSClient(conn *websocket.Conn){
+func handleWSClient(conn *websocket.Conn) {
 	defer conn.Close()
 
 	log.Printf("新连接:%s", conn.RemoteAddr())
@@ -49,16 +49,16 @@ func handleWSClient(conn *websocket.Conn){
 	go func() {
 		for {
 			select {
-				case <-timer.C:				
-					if err := conn.WriteControl(
-						websocket.PingMessage,
-						nil,
-						time.Now().Add(writeWait));err != nil {
-						return
-					}
-					timer.Reset(pingSpit)
-				case <-done:
+			case <-timer.C:
+				if err := conn.WriteControl(
+					websocket.PingMessage,
+					nil,
+					time.Now().Add(writeWait)); err != nil {
 					return
+				}
+				timer.Reset(pingSpit)
+			case <-done:
+				return
 			}
 		}
 	}()

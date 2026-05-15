@@ -39,6 +39,13 @@ func (c *Peer) connect() error {
 	
 	c.mu.Unlock()
 	log.Printf("已建立连接:%s", c.serverURL)
+
+	if msg.App != nil || msg.Battery != nil || msg.Screen != nil {
+		err := c.Send(msg)
+		if err != nil {
+			return err
+		}
+	}
 	for {
 		_, _, err := conn.ReadMessage()
 		if err != nil {
@@ -47,7 +54,6 @@ func (c *Peer) connect() error {
 		}
 		conn.SetReadDeadline(time.Now().Add(holdWait))
 	}
-	return nil
 }
 
 func (c *Peer) Send(msg *Message) error {

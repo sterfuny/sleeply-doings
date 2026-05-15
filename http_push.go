@@ -39,9 +39,9 @@ func (h *PushHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			Screen = &s
 		}
 	}
-	
-	msg.Update(App, Battery, Screen)
-	w.WriteHeader(http.StatusOK)  //return 200
+
+	updateInfo(App, Battery, Screen)
+	w.WriteHeader(http.StatusOK) //return 200
 	log.Printf("HTTP推送成功:%s", formatMessage(msg))
 }
 
