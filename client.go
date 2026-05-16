@@ -9,7 +9,7 @@ import (
 )
 
 func (c *Peer) connect() error {
-	u, err := url.Parse(c.serverURL)
+	u, err := url.Parse(c.URL)
 	if err != nil {
 		return err
 	}
@@ -38,7 +38,7 @@ func (c *Peer) connect() error {
 	})
 	
 	c.mu.Unlock()
-	log.Printf("已建立连接:%s", c.serverURL)
+	log.Printf("已建立连接:%s", c.URL)
 
 	if msg.App != nil || msg.Battery != nil || msg.Screen != nil {
 		err := c.Send(msg)
@@ -48,8 +48,8 @@ func (c *Peer) connect() error {
 	}
 	for {
 		_, _, err := conn.ReadMessage()
+
 		if err != nil {
-			log.Printf("读取失败:%v", err)
 			return err
 		}
 		conn.SetReadDeadline(time.Now().Add(holdWait))

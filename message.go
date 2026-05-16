@@ -18,8 +18,8 @@ type AppInfo struct {
 	Pkg  string `json:"pkg,omitempty"`
 }
 
-var msg *Message = &Message{App: &AppInfo{}}
-var newMsg chan *Message = make(chan *Message)
+var msg *Message = &Message{}
+var newMsgCh chan *Message = make(chan *Message)
 
 func (m *Message) ToJSON() ([]byte, error) {
 	return json.Marshal(m)
@@ -68,9 +68,7 @@ func updateInfo(app *AppInfo, battery *int, screen *bool) {
 	}
 
 	select {
-	case newMsg <- &Message{App: app, Battery: battery, Screen: screen}:
-		// 如果 newMsg 有空位（还没满），立即发送成功
+	case newMsgCh <- &Message{App: app, Battery: battery, Screen: screen}:
 	default:
-		// 如果 newMsg 已满（上次的还没被接收），直接跳过
 	}
 }

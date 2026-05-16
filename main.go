@@ -4,50 +4,36 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"time"
+	"strings"
 )
 
 func main() {
-	var mode string
+	var(
+		mode string
+		serverFlag string
+	)
 	port := flag.Int("port", 8080, "server port")
-	serverAddr := flag.String("server", "ws://localhost:8080/ws", "server URL(client mode)")
+	flag.StringVar(&serverFlag , "server", "ws://localhost:8080/ws", "server URL(client mode)")
 	flag.StringVar(&mode, "mode", "server", "mode is server/client")
-	// 获取用户输入参数
-	flag.Parse()
+	flag.Parse()// 获取cli输入参数
+
+	serverAddrs := strings.Split(serverFlag, ",")
 
 	if mode == "server" {
 		addr := fmt.Sprintf(":%d", *port)
 		log.Fatal(startServer(addr))
 	}
 
-	client := &Peer{serverURL: *serverAddr}
-	go func() {
-		for {
-			if err := client.connect(); err != nil {
-				log.Printf("连接失败:%v", err)
-				time.Sleep(10 * time.Second)
-			} else {
-				log.Print("注销")
-			}
-		}
-	}()
-	defer client.Close()
+	// mode = "debug"
+	if mode == "debug" {
+		serverAddrs = append(serverAddrs, 
+			"ws://localhost:8181/ws",
+			"ws://localhost:9191/ws",
+		)
+	}
 
-	go func() {
-		if err := startHTTPPush(":9090"); err != nil {
-			log.Fatal(err)
-		}
-	}()
+	startClients(serverAddrs)
 
-	go func() {
-		for {
-			err := client.Send(<-newMsg)
-			if err != nil {
-				log.Print(err)
-			}
-		}
-	}()
-
-	log.Printf("客户端已启动，HTTP接口:9090/push，WebSocket连接: %s", *serverAddr)
+	log.Printf("客户端已启动")
 	select {}
 }
