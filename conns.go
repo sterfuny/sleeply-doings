@@ -2,9 +2,9 @@ package main
 
 import (
 	"context"
+	"log"
 	"sync"
 	"time"
-	"log"
 
 	"github.com/gorilla/websocket"
 )
@@ -15,20 +15,24 @@ const (
 	pingSpit  = (holdWait * 9) / 10
 )
 
-type Peer struct {
-	URL string
-	conn      *websocket.Conn
-	timer     *time.Timer
+type sPeer struct {
+	URL    string
+	conn   *websocket.Conn
+	timer  *time.Timer
+}
+
+type cPeer struct {
+	URL    string
+	conn   *websocket.Conn
 	newMsg chan *Message
 
 	mu     sync.Mutex
 	muPub  sync.RWMutex
-	cancel context.CancelFunc
 }
 
-func broadcast(s []*Peer) {
-	tmp := <- newMsgCh
-	for _, p := range s{
+func broadcast(s []*cPeer) {
+	tmp := <-newMsgCh
+	for _, p := range s {
 		select {
 		case p.newMsg <- tmp:
 		default:
@@ -38,12 +42,12 @@ func broadcast(s []*Peer) {
 }
 
 func startClients(addrs []string) {
-	Peers := make([]*Peer, 0, len(addrs))
+	Peers := make([]*cPeer, 0, len(addrs))
 
 	for _, addr := range addrs {
-		client := &Peer{URL: addr}
+		client := &cPeer{URL: addr}
 		Peers = append(Peers, client)
-		go func(c *Peer) {
+		go func(c *cPeer) {
 			c.newMsg = make(chan *Message, 1)
 			defer c.Close()
 			go func() {
@@ -72,6 +76,7 @@ func startClients(addrs []string) {
 		}
 	}()
 
-	for {broadcast(Peers)}
+	for {
+		broadcast(Peers)
+	}
 }
-

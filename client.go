@@ -8,7 +8,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-func (c *Peer) connect() error {
+func (c *cPeer) connect() error {
 	u, err := url.Parse(c.URL)
 	if err != nil {
 		return err
@@ -36,7 +36,7 @@ func (c *Peer) connect() error {
 			time.Now().Add(writeWait),
 		)
 	})
-	
+
 	c.mu.Unlock()
 	log.Printf("已建立连接:%s", c.URL)
 
@@ -56,8 +56,8 @@ func (c *Peer) connect() error {
 	}
 }
 
-func (c *Peer) Send(msg *Message) error {
-	c.mu.Lock()	
+func (c *cPeer) Send(msg *Message) error {
+	c.mu.Lock()
 	defer c.mu.Unlock()
 	conn := c.conn
 
@@ -79,7 +79,7 @@ func (c *Peer) Send(msg *Message) error {
 	return nil
 }
 
-func (c *Peer) Close() {
+func (c *cPeer) Close() {
 	c.cancel()
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -87,4 +87,3 @@ func (c *Peer) Close() {
 		c.conn.Close()
 	}
 }
-
