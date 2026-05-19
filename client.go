@@ -1,6 +1,8 @@
 package main
 
 import (
+	"errors"
+	"fmt"
 	"log"
 	"net/url"
 	"time"
@@ -35,17 +37,17 @@ func (c *cPeer) connect() error {
 			nil,
 			time.Now().Add(writeWait),
 		)
+
 	})
 
-	c.mu.Unlock()
+	registerMsg := fmt.Sprintf(`{"id":"%s"}`, Get().ID)
+	conn.WriteMessage(websocket.TextMessage, []byte(registerMsg))
 	log.Printf("已建立连接:%s", c.URL)
-
-	if msg.App != nil || msg.Battery != nil || msg.Screen != nil {
-		err := c.Send(msg)
-		if err != nil {
-			return err
-		}
+	c.mu.Unlock()
+	if err := c.Send(msg); err != nil {
+		return err
 	}
+
 	for {
 		_, _, err := conn.ReadMessage()
 		if err != nil {
@@ -55,7 +57,7 @@ func (c *cPeer) connect() error {
 	}
 }
 
-func (c *cPeer) Send(msg *Message) error {
+func (c *cPeer) Send(msg any) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	conn := c.conn
@@ -64,9 +66,15 @@ func (c *cPeer) Send(msg *Message) error {
 		c.connect()
 	}
 
-	data, err := msg.ToJSON()
-	if err != nil {
-		return err
+	var data []byte
+
+	switch v:=msg.(type) {
+	case *Message:
+		data, _ = v.ToJSON()
+	case string:
+		data = []byte(v)
+	default:
+		return errors.New("unkown msg type")
 	}
 
 	conn.SetWriteDeadline(time.Now().Add(writeWait))

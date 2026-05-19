@@ -18,8 +18,7 @@ const (
 )
 
 type sPeer struct {
-	divice string
-	status bool
+	divice *Device 
 	conn   *websocket.Conn
 	timer  *time.Timer
 
@@ -35,6 +34,8 @@ type cPeer struct {
 	mu    sync.Mutex
 	muPub sync.RWMutex
 }
+
+var devices map[string]*Device
 
 func startServer(addr string) error {
 	http.HandleFunc("/ws", handleConn)

@@ -2,17 +2,40 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"net/http"
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/google/uuid"
 )
 
 var upgrader = websocket.Upgrader{
 	CheckOrigin:     func(r *http.Request) bool { return true },
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
+}
+
+func findId(data []byte) error {
+	var tmp struct {
+		ID string `json:"id"`
+	}
+
+	json.Unmarshal(data, &tmp)
+	if _, err := uuid.Parse(tmp.ID); err != nil {
+		return err
+	}
+	id := tmp.ID
+	// var dev *Device
+	// dev.ID = tmp.ID
+	dev, exists := devices[id]
+	if !exists {
+		    // 新设备，创建记录
+		    dev = &Device{ID: id}
+		    devices[id] = dev
+	}
+	return nil
 }
 
 func handleConn(w http.ResponseWriter, r *http.Request) {
@@ -47,6 +70,11 @@ func (s *sPeer) handleWSClient() {
 
 	s.ctx, s.cancel = context.WithCancel(context.Background())
 	defer s.cancel()
+
+	_, msgBytes, _ := conn.ReadMessage()
+	if err := findId(msgBytes); err != nil {
+		log.Printf("未知设备")
+	}
 	go s.setOnline(true)
 
 	for {
@@ -58,21 +86,21 @@ func (s *sPeer) handleWSClient() {
 		conn.SetReadDeadline(time.Now().Add(holdWait))
 		timer.Reset(pingSpit)
 
-		msg, err := MessageFromJSON(msgBytes)
+		s.divice.Lastmsg, err = MessageFromJSON(msgBytes)
 		if err != nil {
 			log.Printf("解析失败:%v", err)
 			continue
 		}
-		log.Printf("%s", formatMessage(msg))
+		log.Printf("%s", formatMessage(s.divice.Lastmsg))
 	}
 }
 
 func (s *sPeer) setOnline(re bool) {
 	if re == false {
-		s.status = false
+		s.divice.Status = false
 		return
 	}
-	s.status = true
+	s.divice.Status = true
 	defer s.setOnline(false)
 
 	for {
