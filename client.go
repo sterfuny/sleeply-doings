@@ -48,7 +48,6 @@ func (c *cPeer) connect() error {
 	}
 	for {
 		_, _, err := conn.ReadMessage()
-
 		if err != nil {
 			return err
 		}
@@ -66,7 +65,6 @@ func (c *cPeer) Send(msg *Message) error {
 	}
 
 	data, err := msg.ToJSON()
-	// log.Printf("jsonsend")
 	if err != nil {
 		return err
 	}
@@ -80,7 +78,6 @@ func (c *cPeer) Send(msg *Message) error {
 }
 
 func (c *cPeer) Close() {
-	c.cancel()
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if c.conn != nil {

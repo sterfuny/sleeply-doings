@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"time"
@@ -14,24 +15,25 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 
-//var conns = make(map[*websocket.Conn])
-
 func handleConn(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Print(err)
 		return
 	}
-	go handleWSClient(conn)
+	ws := &sPeer{conn: conn}
+	go ws.handleWSClient()
 }
 
-func handleWSClient(conn *websocket.Conn) {
+func (s *sPeer) handleWSClient() {
+	conn := s.conn
 	defer conn.Close()
 
 	log.Printf("新连接:%s", conn.RemoteAddr())
 
 	// 放入计时
 	timer := time.NewTimer(pingSpit)
+	s.timer = timer
 	defer timer.Stop()
 
 	// 初次死线
@@ -43,30 +45,14 @@ func handleWSClient(conn *websocket.Conn) {
 		return nil
 	})
 
-	done := make(chan struct{})
-	defer close(done)
-
-	go func() {
-		for {
-			select {
-			case <-timer.C:
-				if err := conn.WriteControl(
-					websocket.PingMessage,
-					nil,
-					time.Now().Add(writeWait)); err != nil {
-					return
-				}
-				timer.Reset(pingSpit)
-			case <-done:
-				return
-			}
-		}
-	}()
+	s.ctx, s.cancel = context.WithCancel(context.Background())
+	defer s.cancel()
+	go s.setOnline(true)
 
 	for {
 		_, msgBytes, err := conn.ReadMessage()
 		if err != nil {
-			log.Printf("读取失败:%v", err)
+			log.Printf("连接异常:%v", err)
 			break
 		}
 		conn.SetReadDeadline(time.Now().Add(holdWait))
@@ -74,15 +60,35 @@ func handleWSClient(conn *websocket.Conn) {
 
 		msg, err := MessageFromJSON(msgBytes)
 		if err != nil {
-			log.Printf("JSON解析失败:%v", err)
+			log.Printf("解析失败:%v", err)
 			continue
 		}
 		log.Printf("%s", formatMessage(msg))
 	}
 }
 
-func startServer(addr string) error {
-	http.HandleFunc("/ws", handleConn)
-	log.Printf("服务启动:%s", addr)
-	return http.ListenAndServe(addr, nil)
+func (s *sPeer) setOnline(re bool) {
+	if re == false {
+		s.status = false
+		return
+	}
+	s.status = true
+	defer s.setOnline(false)
+
+	for {
+		select {
+		case <-s.timer.C:
+			err := s.conn.WriteControl(
+				websocket.PingMessage,
+				nil,
+				time.Now().Add(writeWait),
+			)
+			if err != nil {
+				return
+			}
+			s.timer.Reset(pingSpit)
+		case <-s.ctx.Done():
+			return
+		}
+	}
 }

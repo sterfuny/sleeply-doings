@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"log"
+	"net/http"
+	"strconv"
 	"sync"
 	"time"
 
@@ -16,9 +18,13 @@ const (
 )
 
 type sPeer struct {
-	URL    string
+	divice string
+	status bool
 	conn   *websocket.Conn
 	timer  *time.Timer
+
+	ctx    context.Context
+	cancel context.CancelFunc
 }
 
 type cPeer struct {
@@ -26,11 +32,17 @@ type cPeer struct {
 	conn   *websocket.Conn
 	newMsg chan *Message
 
-	mu     sync.Mutex
-	muPub  sync.RWMutex
+	mu    sync.Mutex
+	muPub sync.RWMutex
 }
 
-func broadcast(s []*cPeer) {
+func startServer(addr string) error {
+	http.HandleFunc("/ws", handleConn)
+	log.Printf("服务启动:%s", addr)
+	return http.ListenAndServe(addr, nil)
+}
+
+func clientBroadcast(s []*cPeer) {
 	tmp := <-newMsgCh
 	for _, p := range s {
 		select {
@@ -71,12 +83,12 @@ func startClients(addrs []string) {
 	}
 
 	go func() {
-		if err := startHTTPPush(":9090"); err != nil {
+		if err := startHTTPPush(strconv.Itoa(Get().Port)); err != nil {
 			log.Fatal(err)
 		}
 	}()
 
 	for {
-		broadcast(Peers)
+		clientBroadcast(Peers)
 	}
 }
