@@ -29,11 +29,6 @@ func configInit() error {
 		return err
 	}
 	
-	config.Addrs = []string{
-		"ws://localhost:8080/ws",
-		"ws://localhost:8181/ws",
-		"ws://localhost:9191/ws",
-	}
 	if Get().ID == "" {
 		config.ID = uuid.New().String()
 	}
