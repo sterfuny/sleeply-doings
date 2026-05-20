@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gorilla/websocket"
 	"github.com/google/uuid"
+	"github.com/gorilla/websocket"
 )
 
 var upgrader = websocket.Upgrader{
@@ -27,13 +27,10 @@ func findId(data []byte) error {
 		return err
 	}
 	id := tmp.ID
-	// var dev *Device
-	// dev.ID = tmp.ID
 	dev, exists := devices[id]
-	if !exists {
-		    // 新设备，创建记录
-		    dev = &Device{ID: id}
-		    devices[id] = dev
+	if !exists { // 新设备,创建记录
+		dev = &Device{ID: id}
+		devices[id] = dev
 	}
 	return nil
 }

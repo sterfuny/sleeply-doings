@@ -18,7 +18,7 @@ const (
 )
 
 type sPeer struct {
-	divice *Device 
+	divice *Device
 	conn   *websocket.Conn
 	timer  *time.Timer
 

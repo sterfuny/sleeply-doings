@@ -37,17 +37,16 @@ func (c *cPeer) connect() error {
 			nil,
 			time.Now().Add(writeWait),
 		)
-
 	})
 
 	registerMsg := fmt.Sprintf(`{"id":"%s"}`, Get().ID)
 	conn.WriteMessage(websocket.TextMessage, []byte(registerMsg))
 	log.Printf("已建立连接:%s", c.URL)
 	c.mu.Unlock()
+
 	if err := c.Send(msg); err != nil {
 		return err
 	}
-
 	for {
 		_, _, err := conn.ReadMessage()
 		if err != nil {
@@ -68,7 +67,7 @@ func (c *cPeer) Send(msg any) error {
 
 	var data []byte
 
-	switch v:=msg.(type) {
+	switch v := msg.(type) {
 	case *Message:
 		data, _ = v.ToJSON()
 	case string:
