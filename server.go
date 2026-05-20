@@ -17,7 +17,7 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 
-func findId(data []byte) error {
+func (s *sPeer)findId(data []byte) error {
 	var tmp struct {
 		ID string `json:"id"`
 	}
@@ -29,9 +29,10 @@ func findId(data []byte) error {
 	id := tmp.ID
 	dev, exists := devices[id]
 	if !exists { // 新设备,创建记录
-		dev = &Device{ID: id}
+		dev = &Device{}
 		devices[id] = dev
 	}
+	s.device = devices[id]
 	return nil
 }
 
@@ -69,7 +70,7 @@ func (s *sPeer) handleWSClient() {
 	defer s.cancel()
 
 	_, msgBytes, _ := conn.ReadMessage()
-	if err := findId(msgBytes); err != nil {
+	if err := s.findId(msgBytes); err != nil {
 		log.Printf("未知设备")
 	}
 	go s.setOnline(true)
@@ -83,21 +84,21 @@ func (s *sPeer) handleWSClient() {
 		conn.SetReadDeadline(time.Now().Add(holdWait))
 		timer.Reset(pingSpit)
 
-		s.divice.Lastmsg, err = MessageFromJSON(msgBytes)
+		s.device.Lastmsg, err = MessageFromJSON(msgBytes)
 		if err != nil {
 			log.Printf("解析失败:%v", err)
 			continue
 		}
-		log.Printf("%s", formatMessage(s.divice.Lastmsg))
+		log.Printf("%s", formatMessage(s.device.Lastmsg))
 	}
 }
 
 func (s *sPeer) setOnline(re bool) {
 	if re == false {
-		s.divice.Status = false
+		s.device.Status = false
 		return
 	}
-	s.divice.Status = true
+	s.device.Status = true
 	defer s.setOnline(false)
 
 	for {

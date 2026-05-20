@@ -47,5 +47,5 @@ func (h *PushHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func startHTTPPush(addr string) error {
 	log.Printf("HTTP接口启动在%s", addr)
-	return http.ListenAndServe(":"+addr, &PushHandler{})
+	return http.ListenAndServe(addr, &PushHandler{})
 }

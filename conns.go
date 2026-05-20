@@ -18,7 +18,7 @@ const (
 )
 
 type sPeer struct {
-	divice *Device
+	device *Device
 	conn   *websocket.Conn
 	timer  *time.Timer
 
@@ -35,7 +35,7 @@ type cPeer struct {
 	muPub sync.RWMutex
 }
 
-var devices map[string]*Device
+var devices map[string]*Device = make(map[string]*Device)
 
 func startServer(addr string) error {
 	http.HandleFunc("/ws", handleConn)
@@ -84,7 +84,7 @@ func startClients(addrs []string) {
 	}
 
 	go func() {
-		if err := startHTTPPush(strconv.Itoa(Get().Port)); err != nil {
+		if err := startHTTPPush(":"+strconv.Itoa(Get().Port)); err != nil {
 			log.Fatal(err)
 		}
 	}()
