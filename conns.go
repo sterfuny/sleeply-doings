@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	cfg "sleeply-alive/internal/config"
 )
 
 const (
@@ -84,7 +85,7 @@ func startClients(addrs []string) {
 	}
 
 	go func() {
-		if err := startHTTPPush(":"+strconv.Itoa(Get().Port)); err != nil {
+		if err := startHTTPPush(":"+strconv.Itoa(cfg.Get().Port)); err != nil {
 			log.Fatal(err)
 		}
 	}()

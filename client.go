@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	cfg "sleeply-alive/internal/config"
 )
 
 func (c *cPeer) connect() error {
@@ -39,7 +40,7 @@ func (c *cPeer) connect() error {
 		)
 	})
 
-	registerMsg := fmt.Sprintf(`{"id":"%s"}`, Get().ID)
+	registerMsg := fmt.Sprintf(`{"id":"%s"}`, cfg.Get().ID)
 	conn.WriteMessage(websocket.TextMessage, []byte(registerMsg))
 	log.Printf("已建立连接:%s", c.URL)
 	c.mu.Unlock()

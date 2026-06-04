@@ -1,4 +1,4 @@
-module alive-sleeply
+module sleeply-alive
 
 go 1.25.2
 

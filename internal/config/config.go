@@ -1,7 +1,8 @@
-package main
+package config
 
 import (
 	"os"
+	"fmt"
 	"path/filepath"
 
 	"github.com/google/uuid"
@@ -17,12 +18,17 @@ type Config struct {
 
 var config *Config
 
-func configInit() error {
+func Get() *Config {
+	return config
+}
+
+func init() {
 	home, _ := os.UserHomeDir()
 	path := filepath.Join(home, ".config", "alive", "config.yaml")
 
-	if err := configLoad(path); err != nil {
-		return err
+	if err := Load(path); err != nil {
+		fmt.Println("Failed to load configuration")
+		panic(err)
 	}
 
 	if Get().ID == "" {
@@ -39,25 +45,25 @@ func configInit() error {
 		}
 	}
 
-	if err := configRewrite(path); err != nil {
-		return err
+	if err := Rewrite(path); err != nil {
+		fmt.Println("Failed to load configuration")
+		panic(err)
 	}
-	return nil
 }
 
-func configLoad(path string) error {
+func Load(path string) error {
 	result, err := os.ReadFile(path) // Go 1.16+
 	if os.IsNotExist(err) {
 		// 文件不存在，创建默认配置
 		config = &Config{Mode: "server"}
 		os.MkdirAll(filepath.Dir(path), 0755)
-		return configRewrite(path)
+		return Rewrite(path)
 	}
 
 	return yaml.Unmarshal(result, &config)
 }
 
-func configRewrite(path string) error {
+func Rewrite(path string) error {
 	data, err := yaml.Marshal(&config)
 	if err != nil {
 		return err
