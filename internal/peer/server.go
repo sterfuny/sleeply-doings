@@ -1,4 +1,4 @@
-package main
+package peer
 
 import (
 	"context"
@@ -9,7 +9,17 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
+	. "sleeply-alive/internal/models"
 )
+
+type SPeer struct {
+	device *Device
+	conn   *websocket.Conn
+	timer  *time.Timer
+
+	ctx    context.Context
+	cancel context.CancelFunc
+}
 
 var upgrader = websocket.Upgrader{
 	CheckOrigin:     func(r *http.Request) bool { return true },
@@ -17,7 +27,7 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 
-func (s *sPeer)findId(data []byte) error {
+func (s *SPeer)findId(data []byte) error {
 	var tmp struct {
 		ID string `json:"id"`
 	}
@@ -27,12 +37,7 @@ func (s *sPeer)findId(data []byte) error {
 		return err
 	}
 	id := tmp.ID
-	dev, exists := devices[id]
-	if !exists { // 新设备,创建记录
-		dev = &Device{}
-		devices[id] = dev
-	}
-	s.device = devices[id]
+	s.device = Find(id)
 	return nil
 }
 
@@ -42,11 +47,11 @@ func handleConn(w http.ResponseWriter, r *http.Request) {
 		log.Print(err)
 		return
 	}
-	ws := &sPeer{conn: conn}
+	ws := &SPeer{conn: conn}
 	go ws.handleWSClient()
 }
 
-func (s *sPeer) handleWSClient() {
+func (s *SPeer) handleWSClient() {
 	conn := s.conn
 	defer conn.Close()
 
@@ -89,11 +94,11 @@ func (s *sPeer) handleWSClient() {
 			log.Printf("解析失败:%v", err)
 			continue
 		}
-		log.Printf("%s", formatMessage(s.device.Lastmsg))
+		log.Printf("%s", /*formatMessage(s.device.Lastmsg)*/)
 	}
 }
 
-func (s *sPeer) setOnline(re bool) {
+func (s *SPeer) setOnline(re bool) {
 	if re == false {
 		s.device.Status = false
 		return
@@ -117,4 +122,10 @@ func (s *sPeer) setOnline(re bool) {
 			return
 		}
 	}
+}
+
+func RegisterHandle(addr string) error {
+	http.HandleFunc("/ws", handleConn)
+	log.Printf("服务启动:%s", addr)
+	return http.ListenAndServe(addr, nil)
 }

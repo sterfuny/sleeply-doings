@@ -4,6 +4,8 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+
+	. "sleeply-alive/internal/models"
 )
 
 type PushHandler struct{}
@@ -40,9 +42,9 @@ func (h *PushHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	updateInfo(App, Battery, Screen)
+	UpdateInfo(App, Battery, Screen)
 	w.WriteHeader(http.StatusOK) //return 200
-	log.Printf("HTTP推送成功:%s", formatMessage(msg))
+	log.Printf("HTTP推送成功:%s", FormatMessage())
 }
 
 func startHTTPPush(addr string) error {

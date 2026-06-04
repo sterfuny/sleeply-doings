@@ -1,4 +1,4 @@
-package main
+package peer
 
 import (
 	"errors"
@@ -6,12 +6,23 @@ import (
 	"log"
 	"net/url"
 	"time"
+	"sync"
 
 	"github.com/gorilla/websocket"
 	cfg "sleeply-alive/internal/config"
+	. "sleeply-alive/internal/models"
 )
 
-func (c *cPeer) connect() error {
+type CPeer struct {
+	URL    string
+	NewMsg chan *Message
+	conn   *websocket.Conn
+
+	mu    sync.Mutex
+	muPub sync.RWMutex
+}
+
+func (c *CPeer) Connect() error {
 	u, err := url.Parse(c.URL)
 	if err != nil {
 		return err
@@ -45,9 +56,7 @@ func (c *cPeer) connect() error {
 	log.Printf("已建立连接:%s", c.URL)
 	c.mu.Unlock()
 
-	if err := c.Send(msg); err != nil {
-		return err
-	}
+
 	for {
 		_, _, err := conn.ReadMessage()
 		if err != nil {
@@ -57,13 +66,13 @@ func (c *cPeer) connect() error {
 	}
 }
 
-func (c *cPeer) Send(msg any) error {
+func (c *CPeer) Send(msg any) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	conn := c.conn
 
 	if conn == nil {
-		c.connect()
+		c.Connect()
 	}
 
 	var data []byte
@@ -85,7 +94,7 @@ func (c *cPeer) Send(msg any) error {
 	return nil
 }
 
-func (c *cPeer) Close() {
+func (c *CPeer) Close() {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if c.conn != nil {

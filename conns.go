@@ -1,54 +1,24 @@
 package main
 
 import (
-	"context"
 	"log"
-	"net/http"
 	"strconv"
-	"sync"
 	"time"
 
-	"github.com/gorilla/websocket"
 	cfg "sleeply-alive/internal/config"
+	. "sleeply-alive/internal/models"
+	"sleeply-alive/internal/peer"
 )
-
-const (
-	writeWait = 5 * time.Second
-	holdWait  = 60 * time.Second
-	pingSpit  = (holdWait * 9) / 10
-)
-
-type sPeer struct {
-	device *Device
-	conn   *websocket.Conn
-	timer  *time.Timer
-
-	ctx    context.Context
-	cancel context.CancelFunc
-}
-
-type cPeer struct {
-	URL    string
-	conn   *websocket.Conn
-	newMsg chan *Message
-
-	mu    sync.Mutex
-	muPub sync.RWMutex
-}
-
-var devices map[string]*Device = make(map[string]*Device)
 
 func startServer(addr string) error {
-	http.HandleFunc("/ws", handleConn)
-	log.Printf("服务启动:%s", addr)
-	return http.ListenAndServe(addr, nil)
+	return peer.RegisterHandle(addr)
 }
 
-func clientBroadcast(s []*cPeer) {
-	tmp := <-newMsgCh
+func clientBroadcast(s []*peer.CPeer) {
+	tmp := <-NewMsgCh
 	for _, p := range s {
 		select {
-		case p.newMsg <- tmp:
+		case p.NewMsg <- tmp:
 		default:
 			log.Printf("消息阻塞:%s", p.URL)
 		}
@@ -56,17 +26,17 @@ func clientBroadcast(s []*cPeer) {
 }
 
 func startClients(addrs []string) {
-	Peers := make([]*cPeer, 0, len(addrs))
+	Peers := make([]*peer.CPeer, 0, len(addrs))
 
 	for _, addr := range addrs {
-		client := &cPeer{URL: addr}
+		client := &peer.CPeer{URL: addr}
 		Peers = append(Peers, client)
-		go func(c *cPeer) {
-			c.newMsg = make(chan *Message, 1)
+		go func(c *peer.CPeer) {
+			c.NewMsg = make(chan *Message, 1)
 			defer c.Close()
 			go func() {
 				for {
-					err := c.Send(<-c.newMsg)
+					err := c.Send(<-c.NewMsg)
 					if err != nil {
 						log.Print(err)
 					}
@@ -74,7 +44,7 @@ func startClients(addrs []string) {
 			}()
 
 			for {
-				if err := c.connect(); err != nil {
+				if err := c.Connect(); err != nil {
 					log.Printf("连接异常:%v", err)
 					time.Sleep(10 * time.Second)
 				} else {

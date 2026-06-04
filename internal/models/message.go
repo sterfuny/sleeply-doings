@@ -1,4 +1,4 @@
-package main
+package models
 
 import (
 	"encoding/json"
@@ -19,22 +19,10 @@ type AppInfo struct {
 	Pkg  string `json:"pkg,omitempty"`
 }
 
-// 仅服务端使用以自主设置,也是提供API调用的信息
-type Device struct {
-	// ID      string   `json:"id"`
-	Name    string   `json:"name,omitempty"`
-	Lastmsg *Message `json:"lastmsg,omitempty"`
-	Status  bool     `json:"status"`
-}
-
 var msg *Message = &Message{}
-var newMsgCh chan *Message = make(chan *Message)
+var NewMsgCh chan *Message = make(chan *Message)
 
 func (m *Message) ToJSON() ([]byte, error) {
-	return json.Marshal(m)
-}
-
-func (m *Device) ToJSON() ([]byte, error) {
 	return json.Marshal(m)
 }
 
@@ -46,7 +34,8 @@ func MessageFromJSON(data []byte) (*Message, error) {
 	return &m, nil
 }
 
-func formatMessage(m *Message) string {
+func FormatMessage() string {
+	m := msg
 	var parts []string
 	if m.App != nil {
 		parts = append(parts, fmt.Sprintf("App:{Name:%s Pkg:%s}", m.App.Name, m.App.Pkg))
@@ -60,7 +49,7 @@ func formatMessage(m *Message) string {
 	return fmt.Sprintf("{%s}", strings.Join(parts, " "))
 }
 
-func updateInfo(app *AppInfo, battery *int, screen *bool) {
+func UpdateInfo(app *AppInfo, battery *int, screen *bool) {
 	if app != nil {
 		if msg.App == nil {
 			msg.App = app
@@ -81,7 +70,7 @@ func updateInfo(app *AppInfo, battery *int, screen *bool) {
 	}
 
 	select {
-	case newMsgCh <- &Message{App: app, Battery: battery, Screen: screen}:
+	case NewMsgCh <- &Message{App: app, Battery: battery, Screen: screen}:
 	default:
 	}
 }
