@@ -18,8 +18,8 @@ type Config struct {
 
 var config *Config
 
-func Get() *Config {
-	return config
+func Get() Config {
+	return *config
 }
 
 func init() {

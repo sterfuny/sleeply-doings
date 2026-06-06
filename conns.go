@@ -8,6 +8,7 @@ import (
 	cfg "sleeply-alive/internal/config"
 	. "sleeply-alive/internal/models"
 	"sleeply-alive/internal/peer"
+	"sleeply-alive/internal/manager"
 )
 
 func startServer(addr string) error {
@@ -15,7 +16,7 @@ func startServer(addr string) error {
 }
 
 func clientBroadcast(s []*peer.CPeer) {
-	tmp := <-NewMsgCh
+	tmp := <-manager.NewMsgCh
 	for _, p := range s {
 		select {
 		case p.NewMsg <- tmp:

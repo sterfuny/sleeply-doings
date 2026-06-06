@@ -14,14 +14,3 @@ type Device struct {
 func (m *Device) ToJSON() ([]byte, error) {
 	return json.Marshal(m)
 }
-
-var devices map[string]*Device = make(map[string]*Device)
-
-func Find(id string) *Device{
-	dev, exists := devices[id]
-	if !exists { // 新设备,创建记录
-		dev = &Device{}
-		devices[id] = dev
-	}
-	return devices[id]
-}

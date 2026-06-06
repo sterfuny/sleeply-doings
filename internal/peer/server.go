@@ -9,7 +9,9 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
+
 	. "sleeply-alive/internal/models"
+	"sleeply-alive/internal/manager"
 )
 
 type SPeer struct {
@@ -37,7 +39,7 @@ func (s *SPeer)findId(data []byte) error {
 		return err
 	}
 	id := tmp.ID
-	s.device = Find(id)
+	s.device = manager.FindDev(id)
 	return nil
 }
 
@@ -89,12 +91,12 @@ func (s *SPeer) handleWSClient() {
 		conn.SetReadDeadline(time.Now().Add(holdWait))
 		timer.Reset(pingSpit)
 
-		s.device.Lastmsg, err = MessageFromJSON(msgBytes)
+		s.device.Lastmsg, err = manager.FromMessage(msgBytes)
 		if err != nil {
 			log.Printf("解析失败:%v", err)
 			continue
 		}
-		log.Printf("%s", /*formatMessage(s.device.Lastmsg)*/)
+		log.Printf("%s", manager.FormatMessage(s.device.Lastmsg))
 	}
 }
 
