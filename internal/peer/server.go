@@ -11,7 +11,7 @@ import (
 	"github.com/gorilla/websocket"
 
 	. "sleeply-alive/internal/models"
-	"sleeply-alive/internal/manager"
+	"sleeply-alive/internal/ctrl"
 )
 
 type SPeer struct {
@@ -29,7 +29,7 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 
-func (s *SPeer)findId(data []byte) error {
+func (s *SPeer)find(data []byte) error {
 	var tmp struct {
 		ID string `json:"id"`
 	}
@@ -39,7 +39,10 @@ func (s *SPeer)findId(data []byte) error {
 		return err
 	}
 	id := tmp.ID
-	s.device = manager.FindDev(id)
+	s.device = ctrl.FindDev(id)
+	if s.device==nil {
+		ctrl.MkDev(id)
+	}
 	return nil
 }
 
@@ -77,7 +80,7 @@ func (s *SPeer) handleWSClient() {
 	defer s.cancel()
 
 	_, msgBytes, _ := conn.ReadMessage()
-	if err := s.findId(msgBytes); err != nil {
+	if err := s.find(msgBytes); err != nil {
 		log.Printf("未知设备")
 	}
 	go s.setOnline(true)
@@ -91,12 +94,12 @@ func (s *SPeer) handleWSClient() {
 		conn.SetReadDeadline(time.Now().Add(holdWait))
 		timer.Reset(pingSpit)
 
-		s.device.Lastmsg, err = manager.FromMessage(msgBytes)
+		s.device.Lastmsg, err = ctrl.FromMessage(msgBytes)
 		if err != nil {
 			log.Printf("解析失败:%v", err)
 			continue
 		}
-		log.Printf("%s", manager.FormatMessage(s.device.Lastmsg))
+		log.Printf("%s", ctrl.FormatMessage(s.device.Lastmsg))
 	}
 }
 

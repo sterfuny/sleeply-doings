@@ -8,7 +8,8 @@ import (
 	cfg "sleeply-alive/internal/config"
 	. "sleeply-alive/internal/models"
 	"sleeply-alive/internal/peer"
-	"sleeply-alive/internal/manager"
+	"sleeply-alive/internal/ctrl"
+	"sleeply-alive/api"
 )
 
 func startServer(addr string) error {
@@ -16,7 +17,7 @@ func startServer(addr string) error {
 }
 
 func clientBroadcast(s []*peer.CPeer) {
-	tmp := <-manager.NewMsgCh
+	tmp := <-ctrl.NewMsgCh
 	for _, p := range s {
 		select {
 		case p.NewMsg <- tmp:
@@ -56,7 +57,7 @@ func startClients(addrs []string) {
 	}
 
 	go func() {
-		if err := startHTTPPush(":"+strconv.Itoa(cfg.Get().Port)); err != nil {
+		if err := api.StartHTTPPush(":"+strconv.Itoa(cfg.Get().Port)); err != nil {
 			log.Fatal(err)
 		}
 	}()

@@ -1,12 +1,11 @@
-package main
+package api
 
 import (
-	"log"
 	"net/http"
 	"strconv"
 
 	. "sleeply-alive/internal/models"
-	"sleeply-alive/internal/manager"
+	"sleeply-alive/internal/ctrl"
 )
 
 type PushHandler struct{}
@@ -43,11 +42,6 @@ func (h *PushHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	manager.UpdateInfo(App, Battery, Screen)
+	ctrl.UpdateInfo(App, Battery, Screen)
 	w.WriteHeader(http.StatusOK) //return 200
-}
-
-func startHTTPPush(addr string) error {
-	log.Printf("HTTP接口启动在%s", addr)
-	return http.ListenAndServe(addr, &PushHandler{})
 }
