@@ -5,11 +5,11 @@ import (
 	"strconv"
 	"time"
 
+	"sleeply-alive/api"
 	cfg "sleeply-alive/internal/config"
+	"sleeply-alive/internal/ctrl"
 	. "sleeply-alive/internal/models"
 	"sleeply-alive/internal/peer"
-	"sleeply-alive/internal/ctrl"
-	"sleeply-alive/api"
 )
 
 func startServer() {
@@ -62,7 +62,7 @@ func startClients() {
 	}
 
 	go func() {
-		err := api.StartHTTPPush(":"+strconv.Itoa(cfg.Get().Port))
+		err := api.StartHTTPPush(":" + strconv.Itoa(cfg.Get().Port))
 		if err != nil {
 			log.Fatal(err)
 		}

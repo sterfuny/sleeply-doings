@@ -6,7 +6,7 @@ import (
 
 var devices map[string]*Device = make(map[string]*Device)
 
-func FindDev(id string) *Device{
+func FindDev(id string) *Device {
 	dev, exists := devices[id]
 	if !exists {
 		return nil

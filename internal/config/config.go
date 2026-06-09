@@ -1,8 +1,8 @@
 package config
 
 import (
-	"os"
 	"fmt"
+	"os"
 	"path/filepath"
 
 	"github.com/google/uuid"

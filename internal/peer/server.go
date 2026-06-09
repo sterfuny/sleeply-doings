@@ -9,8 +9,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 
-	. "sleeply-alive/internal/models"
 	"sleeply-alive/internal/ctrl"
+	. "sleeply-alive/internal/models"
 )
 
 type SPeer struct {
@@ -27,7 +27,7 @@ func PeerInit(conn *websocket.Conn) {
 	ws.handleWSClient()
 }
 
-func (s *SPeer)find(data []byte) error {
+func (s *SPeer) find(data []byte) error {
 	var tmp struct {
 		ID string `json:"id"`
 	}
@@ -38,7 +38,7 @@ func (s *SPeer)find(data []byte) error {
 	}
 	id := tmp.ID
 	s.device = ctrl.FindDev(id)
-	if s.device==nil {
+	if s.device == nil {
 		ctrl.MkDev(id)
 	}
 	return nil

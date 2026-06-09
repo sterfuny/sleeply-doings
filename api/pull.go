@@ -3,9 +3,9 @@ package api
 import (
 	"net/http"
 
+	"sleeply-alive/internal/ctrl"
 	. "sleeply-alive/internal/models"
 	"sleeply-alive/internal/peer"
-	"sleeply-alive/internal/ctrl"
 )
 
 type PullHandler struct{}
@@ -36,7 +36,7 @@ func (h *PullHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer r.Body.Close()
-	
+
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(body)
 }

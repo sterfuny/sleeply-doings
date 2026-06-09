@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"strconv"
 
-	. "sleeply-alive/internal/models"
 	"sleeply-alive/internal/ctrl"
+	. "sleeply-alive/internal/models"
 )
 
 type PushHandler struct{}

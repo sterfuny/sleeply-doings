@@ -1,11 +1,11 @@
 package ctrl
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
-	"strings"
 	. "sleeply-alive/internal/models"
-	"encoding/json"
+	"strings"
 )
 
 var msg *Message = &Message{}

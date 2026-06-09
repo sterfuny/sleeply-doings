@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"log"
 	"net/url"
-	"time"
 	"sync"
+	"time"
 
 	"github.com/gorilla/websocket"
 	cfg "sleeply-alive/internal/config"
@@ -55,7 +55,6 @@ func (c *CPeer) Connect() error {
 	conn.WriteMessage(websocket.TextMessage, []byte(registerMsg))
 	log.Printf("已建立连接:%s", c.URL)
 	c.mu.Unlock()
-
 
 	for {
 		_, _, err := conn.ReadMessage()

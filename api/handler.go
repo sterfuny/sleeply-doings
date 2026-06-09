@@ -1,9 +1,9 @@
 package api
 
 import (
+	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
-	"github.com/gorilla/websocket"
 )
 
 var upgrader = websocket.Upgrader{
