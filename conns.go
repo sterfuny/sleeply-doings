@@ -13,7 +13,12 @@ import (
 )
 
 func startServer(addr string) error {
-	return peer.RegisterHandle(addr)
+	go func() {
+		if err := api.StartHTTPPull(addr); err != nil {
+			log.Fatal(err)
+		}
+	}()
+	return nil
 }
 
 func clientBroadcast(s []*peer.CPeer) {
@@ -27,10 +32,10 @@ func clientBroadcast(s []*peer.CPeer) {
 	}
 }
 
-func startClients(addrs []string) {
-	Peers := make([]*peer.CPeer, 0, len(addrs))
+func startClients(remotes []string) {
+	Peers := make([]*peer.CPeer, 0, len(remotes))
 
-	for _, addr := range addrs {
+	for _, addr := range remotes {
 		client := &peer.CPeer{URL: addr}
 		Peers = append(Peers, client)
 		go func(c *peer.CPeer) {

@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"log"
-	"net/http"
 	"time"
 
 	"github.com/google/uuid"
@@ -23,10 +22,9 @@ type SPeer struct {
 	cancel context.CancelFunc
 }
 
-var upgrader = websocket.Upgrader{
-	CheckOrigin:     func(r *http.Request) bool { return true },
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
+func PeerInit(conn *websocket.Conn) {
+	ws := &SPeer{conn: conn}
+	ws.handleWSClient()
 }
 
 func (s *SPeer)find(data []byte) error {
@@ -44,16 +42,6 @@ func (s *SPeer)find(data []byte) error {
 		ctrl.MkDev(id)
 	}
 	return nil
-}
-
-func handleConn(w http.ResponseWriter, r *http.Request) {
-	conn, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Print(err)
-		return
-	}
-	ws := &SPeer{conn: conn}
-	go ws.handleWSClient()
 }
 
 func (s *SPeer) handleWSClient() {
@@ -127,10 +115,4 @@ func (s *SPeer) setOnline(re bool) {
 			return
 		}
 	}
-}
-
-func RegisterHandle(addr string) error {
-	http.HandleFunc("/ws", handleConn)
-	log.Printf("服务启动:%s", addr)
-	return http.ListenAndServe(addr, nil)
 }
