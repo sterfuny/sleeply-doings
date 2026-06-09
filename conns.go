@@ -12,13 +12,13 @@ import (
 	"sleeply-alive/api"
 )
 
-func startServer(addr string) error {
+func startServer() {
 	go func() {
-		if err := api.StartHTTPPull(addr); err != nil {
+		err := api.StartHTTPPull(":" + strconv.Itoa(cfg.Get().Port))
+		if err != nil {
 			log.Fatal(err)
 		}
 	}()
-	return nil
 }
 
 func clientBroadcast(s []*peer.CPeer) {
@@ -32,7 +32,8 @@ func clientBroadcast(s []*peer.CPeer) {
 	}
 }
 
-func startClients(remotes []string) {
+func startClients() {
+	var remotes []string = cfg.Get().Addrs
 	Peers := make([]*peer.CPeer, 0, len(remotes))
 
 	for _, addr := range remotes {
@@ -49,7 +50,6 @@ func startClients(remotes []string) {
 					}
 				}
 			}()
-
 			for {
 				if err := c.Connect(); err != nil {
 					log.Printf("连接异常:%v", err)
@@ -62,7 +62,8 @@ func startClients(remotes []string) {
 	}
 
 	go func() {
-		if err := api.StartHTTPPush(":"+strconv.Itoa(cfg.Get().Port)); err != nil {
+		err := api.StartHTTPPush(":"+strconv.Itoa(cfg.Get().Port))
+		if err != nil {
 			log.Fatal(err)
 		}
 	}()
