@@ -1,9 +1,9 @@
 package main
 
 import (
-	"log"
 	"flag"
 	"fmt"
+	"log"
 	"os"
 
 	cfg "sleeply-alive/internal/config"
@@ -12,7 +12,7 @@ import (
 func main() {
 	// start := flag.Bool("boot", false, "e")
 	var path string
-	flag.StringVar(&path, "f", "","run with select file. default:"+cfg.Path)
+	flag.StringVar(&path, "f", "", "run with select file. default:"+cfg.Path)
 
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
@@ -28,9 +28,10 @@ func main() {
 		os.Exit(2)
 	}
 
+	cfg.Init(path)
 	args := flag.Args()
 	for i, arg := range args {
-		if i==0 && arg=="run" {
+		if i == 0 && arg == "run" {
 			run()
 		}
 	}
