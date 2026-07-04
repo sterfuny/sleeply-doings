@@ -22,9 +22,13 @@ func Get() Config {
 	return *config
 }
 
-func init() {
-	home, _ := os.UserHomeDir()
-	path := filepath.Join(home, ".config", "alive", "config.yaml")
+var home, _ = os.UserHomeDir()
+var Path = filepath.Join(home, ".config", "alive", "config.yaml")
+
+func Init(path string) {
+	if path == "" {
+		path = Path
+	}
 
 	if err := Load(path); err != nil {
 		fmt.Println("Failed to load configuration")
