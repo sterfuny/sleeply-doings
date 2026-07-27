@@ -11,6 +11,7 @@ import (
 type PullHandler struct{}
 
 func (h *PullHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	// 分辨用途 isPeer:isGet;
 	if r.URL.Path == "/ws" {
 		h.handleConn(w, r)
 	}
@@ -47,5 +48,5 @@ func (h *PullHandler) handleConn(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	peer.PeerInit(conn)
+	peer.SPeerInit(conn)
 }

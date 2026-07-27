@@ -22,7 +22,7 @@ type SPeer struct {
 	cancel context.CancelFunc
 }
 
-func PeerInit(conn *websocket.Conn) {
+func SPeerInit(conn *websocket.Conn) {
 	ws := &SPeer{conn: conn}
 	ws.handleWSClient()
 }

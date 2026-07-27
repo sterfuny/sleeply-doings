@@ -21,9 +21,10 @@ func startServer() {
 	}()
 }
 
-func clientBroadcast(s []*peer.CPeer) {
+func clientBroadcast(cs []*peer.CPeer) {
+	// 转发Msg至所有列表cpeer
 	tmp := <-ctrl.NewMsgCh
-	for _, p := range s {
+	for _, p := range cs {
 		select {
 		case p.NewMsg <- tmp:
 		default:
@@ -34,11 +35,12 @@ func clientBroadcast(s []*peer.CPeer) {
 
 func startClients() {
 	var remotes []string = cfg.Get().Addrs
-	Peers := make([]*peer.CPeer, 0, len(remotes))
+	cs := make([]*peer.CPeer, 0, len(remotes))
 
 	for _, addr := range remotes {
 		client := &peer.CPeer{URL: addr}
-		Peers = append(Peers, client)
+		cs = append(cs, client)
+		// 循环启动所有CPeer,维持进程
 		go func(c *peer.CPeer) {
 			c.NewMsg = make(chan *Message, 1)
 			defer c.Close()
@@ -61,6 +63,7 @@ func startClients() {
 		}(client)
 	}
 
+	// client单push
 	go func() {
 		err := api.StartHTTPPush(":" + strconv.Itoa(cfg.Get().Port))
 		if err != nil {
@@ -69,6 +72,6 @@ func startClients() {
 	}()
 
 	for {
-		clientBroadcast(Peers)
+		clientBroadcast(cs)
 	}
 }
