@@ -21,7 +21,7 @@ func MkDev(id uuid.UUID) {
 	// 有防止覆盖机制
 	dev, exists := devices[id]
 	if !exists { // 确认可创建记录
-		dev = &Device{}
+		dev = &Device{Status: false}
 		devices[id] = dev
 	}
 }

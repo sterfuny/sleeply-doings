@@ -2,6 +2,7 @@ package peer
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -26,11 +27,16 @@ func SPeerInit(conn *websocket.Conn) {
 }
 
 func (s *SPeer) find(tmp Message) error {
+	if tmp.UUID == nil {
+		return fmt.Errorf("未注册uuid")
+	}
+
 	id := *tmp.UUID
 	s.device = ctrl.FindDev(id)
 
 	if s.device == nil {
 		ctrl.MkDev(id)
+		s.device = ctrl.FindDev(id)
 	}
 	return nil
 }
@@ -61,10 +67,14 @@ func (s *SPeer) handleWSClient() {
 	// 握手后检查id信息
 	_, msgBytes, _ := conn.ReadMessage()
 
-	if msg, err := ctrl.FromMessage(msgBytes); err == nil {
-		if err := s.find(*msg); err != nil {
-			log.Printf("未知设备")
-		}
+	msg, err := ctrl.FromMessage(msgBytes)
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+	if err := s.find(*msg); err != nil {
+		log.Fatal(err)
+		return
 	}
 
 	go s.setOnline(true)
@@ -87,8 +97,8 @@ func (s *SPeer) handleWSClient() {
 	}
 }
 
-func (s *SPeer) setOnline(re bool) {
-	if re == false {
+func (s *SPeer) setOnline(live bool) {
+	if !live {
 		s.device.Status = false
 		return
 	}

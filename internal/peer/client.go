@@ -55,11 +55,11 @@ func (c *CPeer) Connect() error {
 
 	// registerMsg := fmt.Sprintf(`{"id":"%s"}`, cfg.Get().ID)
 	// conn.WriteMessage(websocket.TextMessage, []byte(registerMsg))
-	if id, err :=uuid.Parse(cfg.Get().ID); err != nil {
+	id, err :=uuid.Parse(cfg.Get().ID)
+	if err != nil {
 		return fmt.Errorf("无法创建id")
-	} else {
-		c.NewMsg <- &Message{UUID:&id}
 	}
+	c.NewMsg <- &Message{UUID:&id}
 
 	log.Printf("已建立连接:%s", c.URL)
 	c.mu.Unlock()
@@ -83,6 +83,7 @@ func (c *CPeer) Send(msg *Message) error {
 	}
 
 	var data []byte
+	data, _ = msg.ToJSON()
 
 	conn.SetWriteDeadline(time.Now().Add(writeWait))
 	if err := conn.WriteMessage(websocket.TextMessage, data); err != nil {
