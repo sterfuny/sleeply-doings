@@ -43,6 +43,7 @@ func main() {
 func run() {
 	if cfg.Get().Mode == "server" {
 		startServer()
+		return
 	}
 
 	if cfg.Get().Mode == "client" && cfg.Get().Addrs != nil {

@@ -13,12 +13,10 @@ import (
 )
 
 func startServer() {
-	go func() {
-		err := api.StartHTTPPull(":" + strconv.Itoa(cfg.Get().Port))
-		if err != nil {
-			log.Fatal(err)
-		}
-	}()
+	err := api.StartHTTPPull(":" + strconv.Itoa(cfg.Get().Port))
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func clientBroadcast(cs []*peer.CPeer) {
