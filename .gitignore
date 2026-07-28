@@ -1,4 +1,5 @@
 *.bin
 *.bak
 *.pem
+*.yaml
 sleeply-alive

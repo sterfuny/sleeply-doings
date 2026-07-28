@@ -10,29 +10,25 @@ import (
 )
 
 func main() {
-	// start := flag.Bool("boot", false, "e")
 	var path string
-	flag.StringVar(&path, "f", "", "run with select file. default:"+cfg.Path)
+	flag.StringVar(&path, "f", "", "select cfg file default:"+cfg.Path)
 
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
-		fmt.Fprintf(os.Stderr, "  A demo program that requires at least one argument.\n\n")
 		flag.PrintDefaults()
 	}
 
-	flag.Parse()
-
-	if flag.NFlag() == 0 && flag.NArg() == 0 {
-		fmt.Fprintln(os.Stderr, "Error: no arguments provided")
+	if len(os.Args) == 1 {
 		flag.Usage()
 		os.Exit(2)
-	}
-
-	cfg.Init(path)
-	args := flag.Args()
-	for i, arg := range args {
-		if i == 0 && arg == "run" {
+	} else {
+		if os.Args[1] == "run" {
+			os.Args = append([]string{os.Args[0]}, os.Args[2:]...)
+			flag.Parse()
+			fmt.Println("path:", path)
+			cfg.Init(path)
 			run()
+			return
 		}
 	}
 
