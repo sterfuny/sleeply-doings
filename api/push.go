@@ -7,7 +7,7 @@ import (
 	// . "sleeply-alive/internal/models"
 )
 
-func autoConvert(s string) interface{} {
+func autoConvert(s string) any {
 	// 尝试 int
 	if i, err := strconv.Atoi(s); err == nil {
 		return i

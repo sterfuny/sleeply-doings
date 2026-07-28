@@ -3,6 +3,8 @@ package api
 import (
 	"net/http"
 
+	"github.com/google/uuid"
+
 	"sleeply-alive/internal/ctrl"
 	. "sleeply-alive/internal/models"
 	"sleeply-alive/internal/peer"
@@ -24,9 +26,15 @@ func (h *PullHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 
 	if v := q.Get("uuid"); v != "" {
+		v, err := uuid.Parse(v)
+		if err != nil{
+			http.Error(w, "nil", http.StatusBadRequest) //return 400
+			return
+		}
+		
 		dev = ctrl.FindDev(v)
 		if dev == nil {
-			http.Error(w, "nil", http.StatusBadRequest)
+			http.Error(w, "nil", http.StatusNotFound) //return 404
 			return
 		}
 	}

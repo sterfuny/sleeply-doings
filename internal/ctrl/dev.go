@@ -2,11 +2,12 @@ package ctrl
 
 import (
 	. "sleeply-alive/internal/models"
+	"github.com/google/uuid"
 )
 
-var devices map[string]*Device = make(map[string]*Device)
+var devices map[uuid.UUID]*Device = make(map[uuid.UUID]*Device)
 
-func FindDev(id string) *Device {
+func FindDev(id uuid.UUID) *Device {
 	// 查找map对应id的*Device
 	dev, exists := devices[id]
 	if !exists {
@@ -15,7 +16,7 @@ func FindDev(id string) *Device {
 	return dev
 }
 
-func MkDev(id string) {
+func MkDev(id uuid.UUID) {
 	// 创建map里的*Device格
 	// 有防止覆盖机制
 	dev, exists := devices[id]

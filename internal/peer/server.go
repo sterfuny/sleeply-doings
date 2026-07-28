@@ -2,11 +2,9 @@ package peer
 
 import (
 	"context"
-	"encoding/json"
 	"log"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 
 	"sleeply-alive/internal/ctrl"
@@ -27,17 +25,10 @@ func SPeerInit(conn *websocket.Conn) {
 	ws.handleWSClient()
 }
 
-func (s *SPeer) find(data []byte) error {
-	var tmp struct {
-		ID string `json:"id"`
-	}
-
-	json.Unmarshal(data, &tmp)
-	if _, err := uuid.Parse(tmp.ID); err != nil {
-		return err
-	}
-	id := tmp.ID
+func (s *SPeer) find(tmp Message) error {
+	id := *tmp.UUID
 	s.device = ctrl.FindDev(id)
+
 	if s.device == nil {
 		ctrl.MkDev(id)
 	}
@@ -67,10 +58,15 @@ func (s *SPeer) handleWSClient() {
 	s.ctx, s.cancel = context.WithCancel(context.Background())
 	defer s.cancel()
 
+	// 握手后检查id信息
 	_, msgBytes, _ := conn.ReadMessage()
-	if err := s.find(msgBytes); err != nil {
-		log.Printf("未知设备")
+
+	if msg, err := ctrl.FromMessage(msgBytes); err == nil {
+		if err := s.find(*msg); err != nil {
+			log.Printf("未知设备")
+		}
 	}
+
 	go s.setOnline(true)
 
 	for {

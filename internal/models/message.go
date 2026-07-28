@@ -10,7 +10,7 @@ type Message struct {
 	// App     *AppInfo `json:"app,omitempty"`
 	// Battery *int     `json:"battery,omitempty"`
 	// Screen  *bool    `json:"screen,omitempty"`
-	UUID	*uuid.UUID		`json:"uuid"`
+	UUID	*uuid.UUID		`json:"uuid,omitempty"`
 	SendKey	*map[string]any	`json:"sendkey,omitempty"`
 }
 
