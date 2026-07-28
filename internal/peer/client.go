@@ -1,16 +1,18 @@
 package peer
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"net/url"
 	"sync"
 	"time"
 
-	"github.com/gorilla/websocket"
 	cfg "sleeply-alive/internal/config"
+	// "sleeply-alive/internal/ctrl"
 	. "sleeply-alive/internal/models"
+
+	"github.com/google/uuid"
+	"github.com/gorilla/websocket"
 )
 
 type CPeer struct {
@@ -51,8 +53,14 @@ func (c *CPeer) Connect() error {
 		)
 	})
 
-	registerMsg := fmt.Sprintf(`{"id":"%s"}`, cfg.Get().ID)
-	conn.WriteMessage(websocket.TextMessage, []byte(registerMsg))
+	// registerMsg := fmt.Sprintf(`{"id":"%s"}`, cfg.Get().ID)
+	// conn.WriteMessage(websocket.TextMessage, []byte(registerMsg))
+	if id, err :=uuid.Parse(cfg.Get().ID); err != nil {
+		return fmt.Errorf("无法创建id")
+	} else {
+		c.NewMsg <- &Message{UUID:&id}
+	}
+
 	log.Printf("已建立连接:%s", c.URL)
 	c.mu.Unlock()
 
@@ -65,7 +73,7 @@ func (c *CPeer) Connect() error {
 	}
 }
 
-func (c *CPeer) Send(msg any) error {
+func (c *CPeer) Send(msg *Message) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	conn := c.conn
@@ -75,15 +83,6 @@ func (c *CPeer) Send(msg any) error {
 	}
 
 	var data []byte
-
-	switch v := msg.(type) {
-	case *Message:
-		data, _ = v.ToJSON()
-	case string:
-		data = []byte(v)
-	default:
-		return errors.New("unkown msg type")
-	}
 
 	conn.SetWriteDeadline(time.Now().Add(writeWait))
 	if err := conn.WriteMessage(websocket.TextMessage, data); err != nil {
