@@ -42,16 +42,25 @@ func startClients() {
 		go func(c *peer.CPeer) {
 			c.NewMsg = make(chan *Message, 1)
 			defer c.Close()
-			go func() {
+			touch := true
+
+			go func(touch bool) {
 				for {
-					err := c.Send(<-c.NewMsg)
-					if err != nil {
-						log.Print(err)
+					bowl := <-c.NewMsg
+					if touch {
+						err := c.Send(bowl)
+						if err != nil {
+							log.Print(err)
+						}
+
 					}
 				}
-			}()
+			}(touch)
+
 			for {
+				touch = true
 				if err := c.Connect(); err != nil {
+					touch = false
 					log.Printf("连接异常:%v", err)
 					time.Sleep(10 * time.Second)
 				} else {
