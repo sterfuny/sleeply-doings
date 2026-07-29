@@ -1,7 +1,6 @@
 package peer
 
 import (
-	"fmt"
 	"log"
 	"net/url"
 	"sync"
@@ -17,9 +16,10 @@ import (
 
 type CPeer struct {
 	URL    string
+	Touch  bool
 	NewMsg chan *Message
-	conn   *websocket.Conn
 
+	conn   *websocket.Conn
 	mu    sync.Mutex
 	muPub sync.RWMutex
 }
@@ -53,13 +53,14 @@ func (c *CPeer) Connect() error {
 		)
 	})
 
-	// registerMsg := fmt.Sprintf(`{"id":"%s"}`, cfg.Get().ID)
-	// conn.WriteMessage(websocket.TextMessage, []byte(registerMsg))
 	id, err :=uuid.Parse(cfg.Get().ID)
 	if err != nil {
-		return fmt.Errorf("无法创建id")
+		return err
 	}
-	c.NewMsg <- &Message{UUID:&id}
+	if err := c.Send(&Message{UUID:&id}); err != nil {
+		return err
+	}
+	c.Touch = true
 
 	log.Printf("已建立连接:%s", c.URL)
 	c.mu.Unlock()
