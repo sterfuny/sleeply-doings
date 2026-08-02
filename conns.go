@@ -58,11 +58,15 @@ func startClients() {
 				}
 			}()
 
+			var retry float64 = 0
 			for {
 				if err := c.Connect(); err != nil {
+					if retry < 1000 {
+						retry++
+					}
 					c.Touch = false
 					log.Printf("连接异常:%v", err)
-					time.Sleep(10 * time.Second)
+					time.Sleep(time.Duration(float64(60*time.Second) * 0.1*retry))
 				} else {
 					log.Print("注销")
 				}

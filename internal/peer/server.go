@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"time"
+	"maps"
 	"strings"
+	"time"
 
 	"github.com/gorilla/websocket"
 
@@ -90,12 +91,21 @@ func (s *SPeer) handleWSClient() {
 		conn.SetReadDeadline(time.Now().Add(holdWait))
 		timer.Reset(pingSpit)
 
-		s.device.Lastmsg, err = ctrl.FromMessage(msgBytes)
+		//处理消息
+		msg, err := ctrl.FromMessage(msgBytes)
+		prevMsg := s.device.Lastmsg
+
+		if prevMsg.SendKey != nil && msg.SendKey != nil {
+			maps.Copy(*prevMsg.SendKey, *msg.SendKey)
+		} else if msg.SendKey != nil {
+			prevMsg.SendKey = msg.SendKey
+		}
+
 		if err != nil {
 			log.Printf("解析失败:%v", err)
 			continue
 		}
-		log.Printf("%s", ctrl.FormatMessage(s.device.Lastmsg))
+		log.Printf("%s", ctrl.FormatMessage(msg))
 	}
 }
 
