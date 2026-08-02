@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"time"
+	"strings"
 
 	"github.com/gorilla/websocket"
 
@@ -69,11 +70,11 @@ func (s *SPeer) handleWSClient() {
 
 	msg, err := ctrl.FromMessage(msgBytes)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 		return
 	}
 	if err := s.find(*msg); err != nil {
-		log.Fatal(err)
+		log.Println(err)
 		return
 	}
 

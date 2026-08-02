@@ -46,10 +46,13 @@ func startClients() {
 			go func() {
 				for {
 					bowl := <-c.NewMsg
-					if c.Touch {
+					if c.Touch || bowl.UUID != nil {
 						err := c.Send(bowl)
 						if err != nil {
 							log.Print(err)
+						}
+						if bowl.UUID != nil {
+							c.Touch = true
 						}
 					}
 				}

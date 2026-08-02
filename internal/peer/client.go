@@ -1,6 +1,7 @@
 package peer
 
 import (
+	"fmt"
 	"log"
 	"net/url"
 	"sync"
@@ -25,6 +26,7 @@ type CPeer struct {
 }
 
 func (c *CPeer) Connect() error {
+	c.Touch = false
 	u, err := url.Parse(c.URL)
 	if err != nil {
 		return err
@@ -53,14 +55,11 @@ func (c *CPeer) Connect() error {
 		)
 	})
 
-	id, err :=uuid.Parse(cfg.Get().ID)
+	id, err := uuid.Parse(cfg.Get().ID)
 	if err != nil {
 		return err
 	}
-	if err := c.Send(&Message{UUID:&id}); err != nil {
-		return err
-	}
-	c.Touch = true
+	c.NewMsg <- &Message{UUID:&id}
 
 	log.Printf("已建立连接:%s", c.URL)
 	c.mu.Unlock()
@@ -85,6 +84,9 @@ func (c *CPeer) Send(msg *Message) error {
 
 	var data []byte
 	data, _ = msg.ToJSON()
+	if len(data) == 0 {
+		return fmt.Errorf("json格式信息失败")
+	}
 
 	conn.SetWriteDeadline(time.Now().Add(writeWait))
 	if err := conn.WriteMessage(websocket.TextMessage, data); err != nil {
