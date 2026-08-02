@@ -78,6 +78,7 @@ func (s *SPeer) handleWSClient() {
 		return
 	}
 
+	s.device.Lastmsg = msg
 	go s.setOnline(true)
 
 	for {
@@ -99,11 +100,25 @@ func (s *SPeer) handleWSClient() {
 }
 
 func (s *SPeer) setOnline(live bool) {
+	if s.device == nil {
+		log.Println("未知device")
+		return
+	}
 	if !live {
 		s.device.Status = false
 		return
 	}
 	s.device.Status = true
+
+	id := s.device.Lastmsg.UUID.String()
+	if strings.TrimSpace(s.device.Name) == "" {
+		a := strings.Split(id,"-")[0]
+		b := id[strings.LastIndex(id, "-")+1:]
+		log.Printf("初次认证:%s-****-****-****-%s", a, b)
+	} else {
+		log.Printf("认证成功:%s", s.device.Name)
+	}
+
 	defer s.setOnline(false)
 
 	for {

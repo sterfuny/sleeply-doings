@@ -25,7 +25,6 @@ func main() {
 		if os.Args[1] == "run" {
 			os.Args = append([]string{os.Args[0]}, os.Args[2:]...)
 			flag.Parse()
-			fmt.Println("path:", path)
 			cfg.Init(path)
 			run()
 			return
