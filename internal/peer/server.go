@@ -11,7 +11,7 @@ import (
 	"github.com/gorilla/websocket"
 
 	"sleeply-alive/internal/ctrl"
-	. "sleeply-alive/internal/models"
+	. "sleeply-alive/internal/model"
 )
 
 type SPeer struct {
@@ -79,7 +79,7 @@ func (s *SPeer) handleWSClient() {
 		return
 	}
 
-	s.device.Lastmsg = msg
+	s.device.LastMsg = msg
 	go s.setOnline(true)
 
 	for {
@@ -93,7 +93,7 @@ func (s *SPeer) handleWSClient() {
 
 		//处理消息
 		msg, err := ctrl.FromMessage(msgBytes)
-		prevMsg := s.device.Lastmsg
+		prevMsg := s.device.LastMsg
 
 		if prevMsg.SendKey != nil && msg.SendKey != nil {
 			maps.Copy(*prevMsg.SendKey, *msg.SendKey)
@@ -120,7 +120,7 @@ func (s *SPeer) setOnline(live bool) {
 	}
 	s.device.Status = true
 
-	id := s.device.Lastmsg.UUID.String()
+	id := s.device.LastMsg.UUID.String()
 	if strings.TrimSpace(s.device.Name) == "" {
 		a := strings.Split(id,"-")[0]
 		b := id[strings.LastIndex(id, "-")+1:]

@@ -1,7 +1,7 @@
 package ctrl
 
 import (
-	. "sleeply-alive/internal/models"
+	. "sleeply-alive/internal/model"
 	"github.com/google/uuid"
 )
 

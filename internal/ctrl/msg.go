@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	. "sleeply-alive/internal/models"
+	. "sleeply-alive/internal/model"
 )
 
 var msg *Message = &Message{}

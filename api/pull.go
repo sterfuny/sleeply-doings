@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 
 	"sleeply-alive/internal/ctrl"
-	. "sleeply-alive/internal/models"
+	. "sleeply-alive/internal/model"
 	"sleeply-alive/internal/peer"
 )
 

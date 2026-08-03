@@ -9,7 +9,7 @@ import (
 
 	cfg "sleeply-alive/internal/config"
 	// "sleeply-alive/internal/ctrl"
-	. "sleeply-alive/internal/models"
+	. "sleeply-alive/internal/model"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"

@@ -8,7 +8,7 @@ import (
 	"sleeply-alive/api"
 	cfg "sleeply-alive/internal/config"
 	"sleeply-alive/internal/ctrl"
-	. "sleeply-alive/internal/models"
+	. "sleeply-alive/internal/model"
 	"sleeply-alive/internal/peer"
 )
 
@@ -61,12 +61,12 @@ func startClients() {
 			var retry float64 = 0
 			for {
 				if err := c.Connect(); err != nil {
-					if retry < 1000 {
+					if retry < 100 {
 						retry++
 					}
 					c.Touch = false
 					log.Printf("连接异常:%v", err)
-					time.Sleep(time.Duration(float64(60*time.Second) * 0.1*retry))
+					time.Sleep(time.Duration(float64(36*time.Second) * retry))
 				} else {
 					log.Print("注销")
 				}
