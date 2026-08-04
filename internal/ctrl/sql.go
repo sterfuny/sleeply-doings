@@ -54,7 +54,7 @@ func SaveDB(dev *Device) {
 		}
 
 		_, err := DB.Exec(
-			"INSERT INTO devices (id, name, status, lastmsg) VALUES (?, ?, ?, ?)",
+			"INSERT OR REPLACE INTO devices (id, name, status, lastmsg) VALUES (?, ?, ?, ?)",
 			id, name, status, lastmsg,
 		)
 		if err != nil {
