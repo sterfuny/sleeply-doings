@@ -16,6 +16,7 @@ func (h *PullHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// 分辨用途 isPeer:isGet;
 	if r.URL.Path == "/ws" {
 		h.handleConn(w, r)
+		return
 	}
 	if r.Method != http.MethodGet && r.Method != http.MethodPost {
 		http.Error(w, "非GET/POST请求", http.StatusMethodNotAllowed)

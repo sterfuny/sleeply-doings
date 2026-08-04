@@ -33,10 +33,8 @@ func OpenDB(path string) {
 
 func SaveDB(dev *Device) {
 	var (
-		id      string
-		lastmsg	string
-		name    string
-		status  int
+		id, lastmsg, name string
+		status            int
 	)
 
 	if dev == nil {

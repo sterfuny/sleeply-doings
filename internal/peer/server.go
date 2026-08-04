@@ -111,7 +111,7 @@ func (s *SPeer) handleWSClient() {
 
 func (s *SPeer) setOnline(live bool) {
 	if s.device == nil {
-		log.Println("未知device")
+		log.Println("device is nil")
 		return
 	}
 	if !live {
