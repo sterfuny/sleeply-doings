@@ -122,13 +122,14 @@ func (s *SPeer) setOnline(live bool) {
 
 	id := s.device.LastMsg.UUID.String()
 	if strings.TrimSpace(s.device.Name) == "" {
-		a := strings.Split(id,"-")[0]
+		a := strings.Split(id, "-")[0]
 		b := id[strings.LastIndex(id, "-")+1:]
 		log.Printf("初次认证:%s-****-****-****-%s", a, b)
 	} else {
 		log.Printf("认证成功:%s", s.device.Name)
 	}
 
+	defer ctrl.SaveDB(s.device)
 	defer s.setOnline(false)
 
 	for {

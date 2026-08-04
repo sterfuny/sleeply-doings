@@ -7,8 +7,8 @@ import (
 )
 
 type Message struct {
-	UUID	*uuid.UUID		`json:"uuid,omitempty"`
-	SendKey	*map[string]any	`json:"sendkey,omitempty"`
+	UUID    *uuid.UUID      `json:"uuid,omitempty"`
+	SendKey *map[string]any `json:"sendkey,omitempty"`
 }
 
 func (m *Message) ToJSON() ([]byte, error) {

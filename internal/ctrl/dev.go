@@ -1,8 +1,8 @@
 package ctrl
 
 import (
-	. "sleeply-alive/internal/model"
 	"github.com/google/uuid"
+	. "sleeply-alive/internal/model"
 )
 
 var devices map[uuid.UUID]*Device = make(map[uuid.UUID]*Device)

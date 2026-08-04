@@ -27,11 +27,11 @@ func (h *PullHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	if v := q.Get("uuid"); v != "" {
 		v, err := uuid.Parse(v)
-		if err != nil{
+		if err != nil {
 			http.Error(w, "nil", http.StatusBadRequest) //return 400
 			return
 		}
-		
+
 		dev = ctrl.FindDev(v)
 		if dev == nil {
 			http.Error(w, "nil", http.StatusNotFound) //return 404

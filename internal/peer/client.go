@@ -20,7 +20,7 @@ type CPeer struct {
 	Touch  bool
 	NewMsg chan *Message
 
-	conn   *websocket.Conn
+	conn  *websocket.Conn
 	mu    sync.Mutex
 	muPub sync.RWMutex
 }
@@ -59,7 +59,7 @@ func (c *CPeer) Connect() error {
 	if err != nil {
 		return err
 	}
-	c.NewMsg <- &Message{UUID:&id}
+	c.NewMsg <- &Message{UUID: &id}
 
 	log.Printf("已建立连接:%s", c.URL)
 	c.mu.Unlock()

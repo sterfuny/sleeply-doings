@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sleeply-alive/internal/ctrl"
 
 	"github.com/google/uuid"
 	"gopkg.in/yaml.v2"
@@ -23,11 +24,12 @@ func Get() Config {
 }
 
 var home, _ = os.UserHomeDir()
-var Path = filepath.Join(home, ".config", "alive", "config.yaml")
+var Path = filepath.Join(home, ".config", "alive")
 
 func Init(path string) {
+	ctrl.OpenDB(Path)
 	if path == "" {
-		path = Path
+		path = filepath.Join(Path, "config.yaml")
 	}
 
 	if err := Load(path); err != nil {

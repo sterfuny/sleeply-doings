@@ -13,6 +13,7 @@ import (
 )
 
 func startServer() {
+	defer ctrl.CloseDB()
 	err := api.StartHTTPPull(":" + strconv.Itoa(cfg.Get().Port))
 	if err != nil {
 		log.Fatal(err)
