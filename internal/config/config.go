@@ -28,6 +28,7 @@ var Path = filepath.Join(home, ".config", "alive")
 
 func Init(path string) {
 	ctrl.OpenDB(Path)
+	ctrl.ReadDB()
 	if path == "" {
 		path = filepath.Join(Path, "config.yaml")
 	}

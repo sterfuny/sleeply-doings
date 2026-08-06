@@ -3,9 +3,11 @@ package ctrl
 import (
 	"database/sql"
 	"log"
+	"fmt"
 	"path/filepath"
 
-	_ "modernc.org/sqlite" // 纯 Go，不需要 CGO
+	"github.com/google/uuid"
+	_ "modernc.org/sqlite"
 
 	. "sleeply-alive/internal/model"
 )
@@ -31,6 +33,42 @@ func OpenDB(path string) {
 	DB = db
 }
 
+func ReadDB() error {
+	var (
+		id, lastmsg, name string
+		status            int
+	)
+	resDev := make(map[uuid.UUID]*Device)
+
+	// 查所有
+	rows, err := DB.Query(
+		"SELECT id, name, status, lastmsg FROM devices",
+	)
+	if err != nil {
+		return err
+	}
+	log.Println("db:loading devices")
+
+	defer rows.Close()
+	for rows.Next() {
+		rows.Scan(&id, &name, &status, &lastmsg)
+		fmt.Printf("%v:%v\n", id, name)
+
+		uuid, err := uuid.Parse(id)
+		if err != nil {
+			return err
+		}
+		msg, err := FromMessage([]byte(lastmsg))
+		if err != nil {
+			return err
+		}
+
+		resDev[uuid] = &Device{Name:name, LastMsg: msg, Status: false}
+	}
+	devices = resDev
+	return nil
+}
+
 func SaveDB(dev *Device) {
 	var (
 		id, lastmsg, name string
@@ -52,6 +90,7 @@ func SaveDB(dev *Device) {
 		} else {
 			status = 0
 		}
+		log.Println("db:saving")
 
 		_, err := DB.Exec(
 			"INSERT OR REPLACE INTO devices (id, name, status, lastmsg) VALUES (?, ?, ?, ?)",
