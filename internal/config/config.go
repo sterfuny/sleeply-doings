@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"sleeply-alive/internal/ctrl"
@@ -28,7 +29,9 @@ var Path = filepath.Join(home, ".config", "alive")
 
 func Init(path string) {
 	ctrl.OpenDB(Path)
-	ctrl.ReadDB()
+	if err := ctrl.ReadDB(); err != nil {
+		log.Fatalf("db:%v", err)
+	}
 	if path == "" {
 		path = filepath.Join(Path, "config.yaml")
 	}

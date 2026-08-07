@@ -38,6 +38,10 @@ func (h *PullHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "nil", http.StatusNotFound) //return 404
 			return
 		}
+
+		if v := q.Get("setname"); v != "" {
+			dev.Name = v
+		}
 	}
 
 	body, err := dev.ToJSON()
