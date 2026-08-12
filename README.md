@@ -13,15 +13,7 @@
 
 ## 配置文件
 
-默认路径 `~/.config/alive/config.yaml`，首次运行自动生成：
-
-```yaml
-mode: server
-port: 9180
-id: 自动生成的 UUID
-addrs:
-  - ws://localhost:9180/ws
-```
+默认路径 `~/.config/alive/config.yaml`，首次运行自动生成服务模式配置
 
 #### 服务端模式
 
@@ -42,27 +34,31 @@ addrs:
   - ws://localhost:9180/ws
 ```
 
-客户端连接 WebSocket 后自动注册，并监听 HTTP 推送接口。
+客户端连接 WebSocket 后自动注册，并监听推送接口（/push）。
 
 ## API
 
-- push
+#### push
 
-*GET/POST* /push?any ...
+***GET/POST***
+
+- /push?any ...
 
 参数任意 any 自动识别 int、float、bool、string
 
-- pull
+#### pull
 
-*GET* /pull?uuid=<设备UUID>
+***GET***
+
+- /pull?uuid=<设备UUID>
 
 获取设备 JSON
 
-*GET* /pull?uuid=<设备UUID>&setname=<名称>
+- /pull?uuid=<设备UUID>&setname=<名称>
 
 返回结果并设置名称
 
-***设备信息结构***
+JSON 结构
 
 ```json
 {
